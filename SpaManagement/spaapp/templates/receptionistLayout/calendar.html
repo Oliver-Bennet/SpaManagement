@@ -1,10 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container py-5">
 
-</body>
-</html>
+    <h3 class="mb-3">
+        Tháng {{ selected_date.month }}, {{ selected_date.year }}
+    </h3>
+
+    <!-- NÚT NGÀY -->
+    <div class="d-flex gap-4 mb-4 fs-5">
+        {% for d in days %}
+            <a href="/receptionist/calendar?date={{ d.strftime('%Y-%m-%d') }}"
+               class="{% if d == selected_date %}fw-bold text-primary{% else %}text-dark{% endif %}">
+                {{ d.day }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <h5 class="mb-4">
+        {{ selected_date.strftime('%d/%m') }}
+        {% if selected_date == selected_date.today() %}
+            (Hôm nay)
+        {% endif %}
+    </h5>
+
+    <!-- LỊCH THEO GIỜ -->
+    {% for time, app in schedule.items() %}
+        <div class="d-flex mb-3 align-items-center">
+            <div class="fw-bold me-4" style="width:80px">{{ time }}</div>
+
+            {% if app %}
+                <div class="flex-grow-1">
+                    {{ app.customer }} - {{ app.service }} - {{ app.staff }}
+                </div>
+                <div>
+                    <a href="#">Check-in</a>
+                    <a href="#" class="mx-2">Sửa</a>
+                    <a href="#" class="text-danger">Hủy</a>
+                </div>
+            {% else %}
+                <a class="text-success"
+                   href="/receptionist/book?date={{ selected_date }}&time={{ time }}">
+                    Trống
+                </a>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

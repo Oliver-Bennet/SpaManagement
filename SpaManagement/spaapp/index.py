@@ -4,7 +4,8 @@ from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
 from spaapp.models import UserRole, User, Service
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from dao import get_schedule_by_date, TIME_SLOTS
 
 @app.route("/")
 def home():
@@ -22,6 +23,32 @@ def receptionist_home():
     menu = dao.load_menu(UserRole.RECEPTIONIST.value)
     today = datetime.today()
     return render_template("receptionistLayout/index.html", today=today, menu=menu)
+
+@app.route("/receptionist/calendar")
+def calendar():
+    today = datetime.now().date()
+    selected_date = request.args.get("date")
+
+    if selected_date:
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    else:
+        selected_date = today
+
+    days = [today + timedelta(days=i) for i in range(-1, 6)]
+
+    schedule = get_schedule_by_date(selected_date.strftime("%Y-%m-%d"))
+    return render_template("receptionistLayout/calendar.html",
+                           days=days,
+                           selected_date=selected_date,
+                           schedule=schedule
+                           )
+@app.route("/receptionist/book")
+def book():
+    date = request.args.get("date")
+    time = request.args.get("time")
+    services = Service.query.filter(Service.active == True).all()
+    return render_template("receptionistLayout/book.html", date=date, time=time, services=services)
+
 #KTV
 @app.route("/technician")
 @login_required

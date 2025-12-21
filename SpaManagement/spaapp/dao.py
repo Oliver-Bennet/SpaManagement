@@ -32,6 +32,39 @@ def add_user(full_name, username, password, phone, image=None):
     db.session.commit()
     return user
 
+# Lễ tân đặt lịch cho khách
+appointments = [
+{
+        "date": "2025-12-21",
+        "time": "10:30",
+        "customer": "Lan",
+        "service": "Massage",
+        "staff": "Minh",
+        "status": "Đã xác nhận"
+    },
+    {
+        "date": "2025-12-21",
+        "time": "14:30",
+        "customer": "Hoa",
+        "service": "Da mặt",
+        "staff": "Hương",
+        "status": "Đã xác nhận"
+    }
+]
+
+TIME_SLOTS = ["09:00", "10:30", "14:30", "15:30"]
+
+def get_schedule_by_date(date):
+    result = {}
+    for t in TIME_SLOTS:
+        result[t] = None
+
+    for a in appointments:
+        if a["date"] == date:
+            result[a["time"]] = a
+
+    return result
+
 def load_menu(role):
     with open("data/menu.json", encoding="utf-8") as f:
         menus = json.load(f)
