@@ -1,0 +1,94 @@
+{% extends "layout/base.html" %}
+{% block title %}Dashboard - Lễ tân{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-success fw-bold">Chào mừng lễ tân {{ current_user.full_name }}!</h2>
+        <p class="text-muted">Hôm nay: {{ today.strftime("%d/%m/%Y") }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Card thống kê nhanh -->
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Khách hôm nay</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Lịch trống</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">8 slot</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Số khách đã điểm danh</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">10 khách</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Lịch cần phân công</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Lịch hẹn hôm nay</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Bấm vào để xem chi tiết hoặc phân công KTV</p>
+                <!-- Table hoặc list lịch hôm nay -->
+                <a href="/reception/calendar" class="btn btn-outline-success">Xem lịch đầy đủ →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

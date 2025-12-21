@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Tinh dầu lavender",
+    "price": 120000,
+    "stock": 50,
+    "warning_stock": 10
+  },
+  {
+    "name": "Kem dưỡng da",
+    "price": 180000,
+    "stock": 30,
+    "warning_stock": 5
+  }
+]

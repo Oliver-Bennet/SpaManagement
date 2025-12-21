@@ -1,0 +1,23 @@
+{% extends "layout/base.html" %}
+{% block title %}Trang khách hàng{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h4 class="mb-4">Lịch hẹn sắp tới</h4>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <!-- Table hoặc card danh sách lịch -->
+                <p class="text-muted">Bạn có 2 lịch hẹn trong tuần này</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <h4 class="mb-4">Thống kê</h4>
+        <div class="card shadow-sm text-center p-4">
+            <h5>Tổng chi tiêu</h5>
+            <h3 class="text-success">5.200.000 VNĐ</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}

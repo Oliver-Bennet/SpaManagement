@@ -1,0 +1,37 @@
+[
+  {
+    "username": "admin",
+    "password": "123456",
+    "full_name": "Admin Manager",
+    "phone": "0900000001",
+    "role": "1"
+  },
+  {
+    "username": "reception",
+    "password": "123456",
+    "full_name": "Receptionist User",
+    "phone": "0900000002",
+    "role": "2"
+  },
+  {
+    "username": "tech",
+    "password": "123456",
+    "full_name": "Technician User",
+    "phone": "0900000003",
+    "role": "3"
+  },
+  {
+    "username": "cashier",
+    "password": "123456",
+    "full_name": "Cashier User",
+    "phone": "0900000004",
+    "role": "4"
+  },
+  {
+    "username": "customer",
+    "password": "123456",
+    "full_name": "Customer User",
+    "phone": "0900000005",
+    "role": "5"
+  }
+]

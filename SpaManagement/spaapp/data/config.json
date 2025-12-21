@@ -1,0 +1,7 @@
+[
+  {
+    "vat_percent": 10,
+    "max_discount_percent": 20,
+    "max_appointments_per_tech_per_day": 5
+  }
+]

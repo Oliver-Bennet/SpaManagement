@@ -1,0 +1,24 @@
+[
+  {
+    "appointment_id": 1,
+    "customer_id": 5,
+    "service_amount": 300000,
+    "product_amount": 300000,
+    "discount_percent": 10,
+    "vat_percent": 10,
+    "total_amount": 594000,
+    "payment_method": "cash",
+    "cashier_id": 4
+  },
+  {
+    "appointment_id": 2,
+    "customer_id": 2,
+    "service_amount": 300000,
+    "product_amount": 300000,
+    "discount_percent": 10,
+    "vat_percent": 10,
+    "total_amount": 594000,
+    "payment_method": "momo",
+    "cashier_id": 3
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Trọn gói",
+    "price": 1500000,
+    "duration_minute": 120,
+    "category": "Gói dịch vụ"
+  },
+  {
+    "name": "Chăm sóc tóc",
+    "price": 300000,
+    "duration_minute": 60,
+    "category": "Chăm sóc tóc"
+  },
+  {
+    "name": "Massage thư giãn",
+    "price": 500000,
+    "duration_minute": 90,
+    "category": "Massage"
+  },
+  {
+    "name": "Chăm sóc cơ thể",
+    "price": 600000,
+    "duration_minute": 90,
+    "category": "Chăm sóc cơ thể"
+  },
+  {
+    "name": "Chăm sóc da",
+    "price": 400000,
+    "duration_minute": 60,
+    "category": "Chăm sóc da"
+  },
+  {
+    "name": "Waxing",
+    "price": 250000,
+    "duration_minute": 45,
+    "category": "Waxing"
+  }
+]

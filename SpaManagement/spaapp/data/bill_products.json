@@ -1,0 +1,16 @@
+[
+  {
+    "bill_id": 1,
+    "product_id": 1,
+    "quantity": 1,
+    "unit_price": 120000,
+    "subtotal": 120000
+  },
+  {
+    "bill_id": 1,
+    "product_id": 2,
+    "quantity": 1,
+    "unit_price": 180000,
+    "subtotal": 180000
+  }
+]

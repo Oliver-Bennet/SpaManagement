@@ -1,0 +1,111 @@
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% extends "layout/base.html" %}
+
+{% block title %}Hóa đơn thanh toán{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        button, a {
+            display: none !important;
+        }
+    }
+</style>
+<script>
+    const total = {{ data.summary.total }};
+    function toggleCash(show) {
+        document.getElementById("cash-area").style.display = show ? "block" : "none";
+    }
+    function calcChange() {
+        const customer = document.getElementById("customerMoney").value || 0;
+        const change = customer - total;
+        document.getElementById("changeMoney").innerText =change > 0 ? change.toLocaleString() : 0;
+    }
+    </script>
+<div class="container mt-4">
+    <a href="/cashier" class="btn btn-primary m-1 bi bi-arrow-left"> Quay lại</a>
+    <h2 class="text-success text-center mt-2">HÓA ĐƠN THANH TOÁN(sửa lại cho pù hợp)</h2>
+    <p>
+        <div class="text-center" >
+        <strong>Nhà hàng ABC</strong><br>
+        <strong >Địa chỉ: Đường ABC, Nhà Bè, TPHCM</strong><br>
+        <strong >Số điện thoại: 0123456789</strong><br>
+        </div>
+        <strong>Nhân viên:</strong> {{ current_user }} <br>
+        <strong>Ngày tạo:</strong>  <br>
+        <strong>Mã order:</strong> {{ data.order.id }}
+    </p>
+    <hr>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Món ăn</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for fo in data.order_items %}
+        <tr>
+            <td>{{ fo.product.name }}</td>
+            <td>{{ fo.quantity }}</td>
+            <td>{{ "{:,.0f}".format(fo.product.price) }}</td>
+            <td>{{ "{:,.0f}".format(fo.quantity * fo.product.price) }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <!--    canh trái-->
+    <div class="container">
+        <div class="row">
+            <div class="col-6"><strong>Tạm tính:</strong></div>
+            <div class="col-6 text-end">{{"{:,.0f}".format(data.subtotal)}}</div>
+        </div>
+        <div class="row">
+            <div class="col-6"><strong>VAT (10%):</strong></div>
+            <div class="col-6 text-end">{{"{:,.0f}".format(data.summary.vat_amount)}}</div>
+        </div>
+        {% if data.summary.discount_rate > 0 %}
+        <div class="row">
+            <div class="col-6"><strong>Giảm giá:</strong></div>
+            <div class="col-6 text-end text-danger">-{{"{:,.0f}".format(data.summary.discount_amount)}}</div>
+        </div>
+        {% endif %}
+        <hr>
+        <div class="row fw-bold">
+            <div class="col-6">Tổng cộng:</div>
+            <div class="col-6 text-end">{{"{:,.0f}".format(data.summary.total)}}VNĐ</div>
+        </div>
+    </div>
+    <hr>
+
+    <p><strong>Phương thức thanh toán</strong></p>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="payment" id="cash" checked onclick="toggleCash(true)">
+        <label class="form-check-label" for="cash">Tiền mặt</label>
+    </div>
+
+    <div class="form-check mb-2">
+        <input class="form-check-input" type="radio" name="payment" id="transfer" onclick="toggleCash(false)">
+        <label class="form-check-label" for="transfer">Chuyển khoản</label>
+    </div>
+
+    <!-- Tien mat -->
+    <div id="cash-area">
+        <div class="mb-2">
+            <label>Tiền khách đưa</label>
+            <input type="number" class="form-control" id="customerMoney" oninput="calcChange()">
+        </div>
+        <p><strong>Tiền thối lại:</strong> <span id="changeMoney">0</span> VNĐ</p>
+    </div>
+
+    <div class="d-flex gap-2">
+    <button class="btn btn-success" onclick="pay({{ data.order.table_id }})">Thanh toán</button>
+    <button onclick="window.print()" class="btn btn-success ">In hóa đơn</button>
+    </div>
+
+</div>
+{% endblock %}
