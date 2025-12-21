@@ -1,37 +1,63 @@
 {% extends "layout/base.html" %}
-{% block title %}Lịch làm việc - KTV{% endblock %}
-{% block sidebar %}{% endblock %}
+{% block title %}Trang chủ Kỹ thuật viên{% endblock %}
 
 {% block content %}
-<div class="text-center mb-5">
-    <h2 class="text-success fw-bold">Chào {{ current_user.full_name }}!</h2>
-    <p class="lead text-muted">Hôm nay bạn có <strong class="text-primary">6 khách</strong></p>
+<div class="text-center mt-3 mb-5">
+    <h2 class="text-success fw-bold">
+        Chào {{ current_user.full_name }}!
+    </h2>
+    <p class="text-muted">
+        Hôm nay: {{ today.strftime("%d/%m/%Y") }}
+    </p>
+    <p class="lead text-muted">
+        Bạn có <strong class="text-primary">{{ today_appointments|length }} khách</strong>
+    </p>
 </div>
 
 <div class="row">
     {% for appt in today_appointments %}
     <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card shadow-sm border-0 h-100">
+        <div class="card shadow-sm h-100">
             <div class="card-header bg-light">
-                <h6 class="mb-0">{{ appt.start_time }} - {{ appt.end_time }}</h6>
+                <strong>{{ appt.start_time }} - {{ appt.end_time }}</strong>
             </div>
+
             <div class="card-body">
                 <h5>{{ appt.customer.full_name }}</h5>
-                <p class="text-muted">{{ appt.service.name or appt.package.name }}</p>
-                <p><strong>Trạng thái:</strong>
-                    <span class="badge bg-warning">Đang chờ</span>
+                <p class="text-muted">
+                    {{ appt.service.name or appt.package.name }}
                 </p>
-                <div class="d-grid gap-2">
-                    <button class="btn btn-success btn-sm">Bắt đầu dịch vụ</button>
-                    <a href="/technician/record/{{ appt.id }}" class="btn btn-outline-success btn-sm">Ghi nhận tiến trình</a>
-                </div>
+
+                <!-- TRẠNG THÁI -->
+                <label class="fw-bold">Trạng thái:</label>
+
+                {% if appt.status == 'DONE' %}
+                    <select class="form-select mb-3" disabled>
+                        <option selected>Đã hoàn thành</option>
+                    </select>
+                {% else %}
+                    <select class="form-select mb-3">
+                        <option selected>Chưa thực hiện</option>
+                    </select>
+                {% endif %}
+
+                <!-- NÚT -->
+                {% if appt.status != 'DONE' %}
+                    <a href="/technician/record/{{ appt.id }}"
+                       class="btn btn-outline-success btn-sm w-100">
+                        📝 Ghi nhận tiến trình
+                    </a>
+                {% else %}
+                    <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                        ✔ Đã hoàn thành
+                    </button>
+                {% endif %}
             </div>
         </div>
     </div>
     {% else %}
     <div class="col-12 text-center py-5">
-        <i class="fas fa-calendar-check fa-5x text-muted mb-3"></i>
-        <h4>Hôm nay bạn nghỉ ngơi nhé!</h4>
+        <h4 class="text-muted">Hôm nay bạn không có lịch ✨</h4>
     </div>
     {% endfor %}
 </div>

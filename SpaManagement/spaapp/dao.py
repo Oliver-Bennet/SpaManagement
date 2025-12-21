@@ -112,3 +112,73 @@ def get_bills_for_today():
         }
         bills.append(bill_info)
     return bills
+
+#Trang chu KTV va xem lich tung ngay
+def get_appointments_by_technician(technician_id, date):
+    return Appointment.query.filter(
+        Appointment.technician_id == technician_id,
+        Appointment.appointment_date == date,
+        Appointment.active == True
+    ).order_by(Appointment.start_time).all()
+
+#Trang record
+def get_appointment_by_id(appt_id):
+    return Appointment.query.get(appt_id)
+
+#Tao lich hen moi (cho le tan va khach)
+def create_appointment(
+    customer_id,
+    technician_id,
+    service_id,
+    appointment_date,
+    start_time,
+    end_time
+):
+    appt = Appointment(
+        customer_id=customer_id,
+        technician_id=technician_id,
+        service_id=service_id,
+        appointment_date=appointment_date,
+        start_time=start_time,
+        end_time=end_time,
+        status="PENDING"
+    )
+
+    db.session.add(appt)
+    db.session.commit()
+    return appt
+
+#Hoan thanh dich vu (Dong bang)
+def complete_appointment(appt_id, note=None):
+    appt = get_appointment_by_id(appt_id)
+    if appt:
+        appt.status = "DONE"
+        if note:
+            appt.note = note
+        db.session.commit()
+    return appt
+
+#Lay lich theo ngay
+def get_appointments_by_date(date):
+    return Appointment.query.filter(
+        Appointment.appointment_date == date,
+        Appointment.active == True
+    ).order_by(Appointment.start_time).all()
+
+#Kiem tra trung lich
+def is_time_conflict(technician_id, appointment_date, start_time, end_time):
+    return Appointment.query.filter(
+        Appointment.technician_id == technician_id,
+        Appointment.appointment_date == appointment_date,
+        Appointment.start_time < end_time,
+        Appointment.end_time > start_time,
+        Appointment.active == True
+    ).first() is not None
+
+#Huy lich
+def cancel_appointment(appt_id):
+    appt = get_appointment_by_id(appt_id)
+    if appt:
+        appt.active = False
+        db.session.commit()
+    return appt

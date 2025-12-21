@@ -1,0 +1,58 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container py-5">
+    <h3 style="text-align: center">Đặt lịch dịch vụ</h3>
+
+    <form method="post">
+        <div class="form-floating mb-3 mt-3">
+            <input type="text" class="form-control" placeholder="Họ tên khách hàng">
+            <label>Họ tên khách hàng</label>
+        </div>
+
+        <div class="form-floating mb-3 mt-3">
+            <input type="text" class="form-control" placeholder="SĐT">
+            <label>SĐT</label>
+        </div>
+
+        <select class="form-select" name="service_id">
+            <option value="">-- Chọn dịch vụ --</option>
+
+            {% for s in services %}
+            <option value="{{ s.id }}">
+                {{ s.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <div class="mt-1 mb-3">
+            <label>Ngày</label>
+            <input class="form-control" value="{{ date }}" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label>Giờ</label>
+            <input class="form-control" value="{{ time }}" readonly>
+        </div>
+
+        <select class="form-select mb-3">
+            <option value="">-- Chọn nhân viên thực hiên --</option>
+            <option>Tuấn</option>
+            <option>Đức</option>
+        </select>
+
+        <div class="form-floating mb-3">
+            <textarea class="form-control" id="note" name="text" placeholder="Ghi chú lễ tân"></textarea>
+            <label for="note">Ghi chú lễ tân</label>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
+            <label class="form-check-label" for="flexSwitchCheckChecked">Gửi SMS xác nhận tự động</label>
+        </div>
+
+
+        <button class="btn btn-primary">Đặt lịch và in phiếu cho khách</button>
+        <button class="btn btn-primary">Chỉ đặt lịch cho khách</button>
+    </form>
+</div>
+{% endblock %}

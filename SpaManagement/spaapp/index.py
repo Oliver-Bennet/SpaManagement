@@ -4,7 +4,7 @@ from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
 from spaapp.models import UserRole, User, Service
-from datetime import datetime
+from datetime import date, datetime
 
 @app.route("/")
 def home():
@@ -22,10 +22,35 @@ def receptionist_home():
     menu = dao.load_menu(UserRole.RECEPTIONIST.value)
     today = datetime.today()
     return render_template("receptionistLayout/index.html", today=today, menu=menu)
-
-@app.route("/technician/")
+#KTV
+@app.route("/technician")
+@login_required
 def technician_home():
-    return render_template("technicianLayout/index.html")
+    today = date.today()
+    appointments = dao.get_appointments_by_technician(
+        technician_id=current_user.id,
+        date=today
+    )
+    return render_template(
+        "technicianLayout/home.html",
+        today=today,
+        today_appointments=appointments
+    )
+
+@app.route("/technician/record/<int:appt_id>", methods=["GET", "POST"])
+@login_required
+def technician_record(appt_id):
+    appt = dao.get_appointment_by_id(appt_id)
+
+    if request.method == "POST":
+        appt.status = "DONE"
+        db.session.commit()
+        return redirect(url_for("technician_home"))
+
+    return render_template(
+        "technicianLayout/record.html",
+        appt=appt
+    )
 
 @app.route("/cashier/")
 def cashier_home():

@@ -1,0 +1,39 @@
+{% extends "layout/base.html" %}
+{% block title %}Ghi nhận tiến trình{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Ghi nhận tiến trình dịch vụ</h5>
+        </div>
+
+        <div class="card-body">
+            <p><strong>Khách:</strong> {{ appt.customer.full_name }}</p>
+            <p><strong>Dịch vụ:</strong>
+                {{ appt.service.name or appt.package.name }}
+            </p>
+            <p><strong>Thời gian:</strong>
+                {{ appt.start_time }} - {{ appt.end_time }}
+            </p>
+
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control"
+                              rows="4"
+                              placeholder="Nhập tình trạng khách hàng..."></textarea>
+                </div>
+
+                <div class="text-end">
+                    <button class="btn btn-success">
+                        ✔ Hoàn thành dịch vụ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
