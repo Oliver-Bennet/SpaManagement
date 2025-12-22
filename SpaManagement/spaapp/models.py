@@ -150,6 +150,16 @@ class Appointment(Base):
 
     def __repr__(self):
         return f'<Appointment {self.id} - {self.appointment_date}>'
+
+    def get_service_name(self):
+        if self.service:
+            return self.service.name
+        if self.package:
+            return self.package.name
+        return "Không xác định"
+
+    def get_customer_name(self):
+        return self.customer.full_name if self.customer else "Không xác định"
 # ---> còn vụ composite pattern và appointmentservice nữa
 #6
 class ServiceRecord(Base):

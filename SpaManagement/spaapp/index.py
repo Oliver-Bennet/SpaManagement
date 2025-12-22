@@ -1,11 +1,13 @@
 import cloudinary
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, abort
 from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
 from spaapp.models import UserRole, User, Service
 from datetime import date, datetime, timedelta
 from dao import get_schedule_by_date, TIME_SLOTS
+from datetime import  date
+from types import SimpleNamespace
 
 @app.route("/")
 def home():
@@ -40,7 +42,9 @@ def calendar():
     return render_template("receptionistLayout/calendar.html",
                            days=days,
                            selected_date=selected_date,
-                           schedule=schedule
+                           schedule=schedule,
+                           now=datetime.now,
+                           today=date.today()
                            )
 @app.route("/receptionist/book")
 def book():
@@ -58,10 +62,22 @@ def technician_home():
         technician_id=current_user.id,
         date=today
     )
+
+    #Tao lich gia
+    # fake_appt = SimpleNamespace(
+    #     id=1,
+    #     start_time="09:00",
+    #     end_time="10:00",
+    #     status="DONE",
+    #     customer=SimpleNamespace(full_name="Nguyễn Văn A"),
+    #     service=SimpleNamespace(name="Massage thư giãn"),
+    #     package=None
+    # )
     return render_template(
-        "technicianLayout/home.html",
+        "technicianLayout/index.html",
         today=today,
-        today_appointments=appointments
+        today_appointments=appointments,
+        # today_appointments = [fake_appt]
     )
 
 @app.route("/technician/record/<int:appt_id>", methods=["GET", "POST"])
@@ -74,9 +90,20 @@ def technician_record(appt_id):
         db.session.commit()
         return redirect(url_for("technician_home"))
 
+    # fake_appt = SimpleNamespace(
+    #     id=appt_id,
+    #     start_time="09:00",
+    #     end_time="10:00",
+    #     status="PENDING",
+    #     customer=SimpleNamespace(full_name="Nguyễn Văn A"),
+    #     service=SimpleNamespace(name="Massage thư giãn"),
+    #     package=None
+    # )
+
     return render_template(
         "technicianLayout/record.html",
         appt=appt
+        # appt=fake_appt
     )
 
 @app.route("/cashier/")
