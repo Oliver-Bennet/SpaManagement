@@ -1,50 +1,109 @@
 {% extends 'layout/base.html' %}
+
 {% block content %}
-<div class="container py-5">
+<div class="container py-4">
 
-    <h3 class="mb-3">
-        Tháng {{ selected_date.month }}, {{ selected_date.year }}
-    </h3>
-
-    <!-- NÚT NGÀY -->
-    <div class="d-flex gap-4 mb-4 fs-5">
-        {% for d in days %}
-            <a href="/receptionist/calendar?date={{ d.strftime('%Y-%m-%d') }}"
-               class="{% if d == selected_date %}fw-bold text-primary{% else %}text-dark{% endif %}">
-                {{ d.day }}
-            </a>
-        {% endfor %}
+    <!-- TIÊU ĐỀ -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">
+                📅 Lịch đặt hẹn
+            </h3>
+            <p class="text-muted mb-0">
+                Tháng {{ selected_date.month }}, {{ selected_date.year }}
+            </p>
+        </div>
     </div>
 
-    <h5 class="mb-4">
-        {{ selected_date.strftime('%d/%m') }}
+    <!-- THANH CHỌN NGÀY -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-3 fs-5">
+                {% for d in days %}
+                <a href="/receptionist/calendar?date={{ d.strftime('%Y-%m-%d') }}"
+                   class="text-decoration-none
+                       {% if d == selected_date %}
+                           fw-bold text-white bg-primary px-3 py-1 rounded
+                       {% else %}
+                           text-dark
+                       {% endif %}">
+                    {{ d.day }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- NGÀY ĐANG XEM -->
+    <h5 class="mb-3">
+        {{ selected_date.strftime('%d/%m/%Y') }}
         {% if selected_date == selected_date.today() %}
-            (Hôm nay)
+        <span class="badge bg-success ms-2">Hôm nay</span>
         {% endif %}
     </h5>
 
     <!-- LỊCH THEO GIỜ -->
-    {% for time, app in schedule.items() %}
-        <div class="d-flex mb-3 align-items-center">
-            <div class="fw-bold me-4" style="width:80px">{{ time }}</div>
+    <div class="card shadow-sm">
+        <div class="card-body">
 
-            {% if app %}
-                <div class="flex-grow-1">
-                    {{ app.customer }} - {{ app.service }} - {{ app.staff }}
+            {% for time, app in schedule.items() %}
+            <div class="row align-items-center py-2 border-bottom">
+
+                <!-- GIỜ -->
+                <div class="col-2 fw-bold text-muted">
+                    ⏰ {{ time }}
                 </div>
-                <div>
-                    <a href="#">Check-in</a>
-                    <a href="#" class="mx-2">Sửa</a>
-                    <a href="#" class="text-danger">Hủy</a>
+
+                {% set current_time = now().strftime('%H:%M') %}
+                {% if app %}
+                <!-- CÓ LỊCH -->
+                <div class="col-6">
+                    <div class="fw-bold">{{ app.customer }}</div>
+                    <div class="text-muted small">
+                        {{ app.service }} • KTV: {{ app.staff }}
+                    </div>
                 </div>
-            {% else %}
-                <a class="text-success"
-                   href="/receptionist/book?date={{ selected_date }}&time={{ time }}">
-                    Trống
-                </a>
-            {% endif %}
+
+                <div class="col-4 text-end">
+                    <a href="#" class="btn btn-outline-success btn-sm">
+                        Check-in
+                    </a>
+                    <a href="#" class="btn btn-outline-primary btn-sm mx-1">
+                        Sửa
+                    </a>
+                    <a href="#" class="btn btn-outline-danger btn-sm">
+                        Hủy
+                    </a>
+                </div>
+                {% else %}
+                {% if selected_date < today %}
+                <span class="text-muted fst-italic">
+                    ⛔ Đã qua ngày
+                </span>
+
+                {% elif selected_date == today and time <= current_time %}
+                <span class="text-muted fst-italic">
+                    ⏰ Đã qua giờ
+                </span>
+
+                {% else %}
+                <!-- KHUNG GIỜ TRỐNG -->
+                <div class="col-10">
+                    <a class="btn btn-sm btn-success"
+                       href="/receptionist/book?date={{ selected_date }}&time={{ time }}">
+                        ➕ Đặt lịch
+                    </a>
+                    <span class="text-muted ms-2">
+                                (Chưa có khách)
+                            </span>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+
         </div>
-    {% endfor %}
+    </div>
 
 </div>
 {% endblock %}
