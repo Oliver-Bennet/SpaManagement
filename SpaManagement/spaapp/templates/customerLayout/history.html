@@ -1,0 +1,45 @@
+{% extends "layout/base.html" %}
+{% block title %}Lịch sử{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mt-3 text-success">Lịch sử dịch vụ</h3>
+
+    <div class="table-responsive mt-4">
+        <table class="table table-hover align-middle">
+            <thead class="table-success">
+                <tr>
+                    <th>Ngày</th>
+                    <th>Dịch vụ</th>
+                    <th>KTV</th>
+                    <th>Giá</th>
+                    <th>Đánh giá</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>05/12/2025</td>
+                    <td>Massage thư giãn</td>
+                    <td>Minh</td>
+                    <td>850k</td>
+                    <td><span class="text-warning">★★★★★</span></td>
+                </tr>
+                <tr>
+                    <td>28/11/2025</td>
+                    <td>Chăm sóc da</td>
+                    <td>Hương</td>
+                    <td>1.2tr</td>
+                    <td><span class="text-warning">★★★★☆</span></td>
+                </tr>
+                <tr>
+                    <td>20/11/2025</td>
+                    <td>Gội đầu dưỡng sinh</td>
+                    <td>Lan</td>
+                    <td>450k</td>
+                    <td><a href="#" class="text-decoration-none">[Đánh giá]</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

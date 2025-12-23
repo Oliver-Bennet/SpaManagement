@@ -1,22 +1,49 @@
 {% extends "layout/base.html" %}
-{% block title %}Trang khách hàng{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <h4 class="mb-4">Lịch hẹn sắp tới</h4>
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <!-- Table hoặc card danh sách lịch -->
-                <p class="text-muted">Bạn có 2 lịch hẹn trong tuần này</p>
+<div class="container-fluid">
+    <h3 class="mt-3 text-success">Chào mừng quay lại, Lan!</h3>
+
+    <div class="row mt-4">
+        <!-- Lịch sắp tới -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Lịch sắp tới</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>14:00</strong> - Massage thư giãn<br>
+                                <small class="text-muted">10/12</small>
+                            </div>
+                            <span class="badge bg-primary">KTV: Minh</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>10:30</strong> - Chăm sóc da<br>
+                                <small class="text-muted">10/12</small>
+                            </div>
+                            <span class="badge bg-primary">KTV: Hương</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <h4 class="mb-4">Thống kê</h4>
-        <div class="card shadow-sm text-center p-4">
-            <h5>Tổng chi tiêu</h5>
-            <h3 class="text-success">5.200.000 VNĐ</h3>
+
+        <!-- Tổng chi tiêu -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm text-center bg-light">
+                <div class="card-body">
+                    <h6>Tổng chi tiêu tháng này</h6>
+                    <h3 class="text-danger fw-bold">2.450.000đ</h3>
+                    <hr>
+                    <h6>Tổng cộng từ trước</h6>
+                    <h4 class="text-success fw-bold">12.800.000đ</h4>
+                </div>
+            </div>
         </div>
     </div>
 </div>
