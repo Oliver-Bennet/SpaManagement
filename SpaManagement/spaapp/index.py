@@ -20,6 +20,7 @@ def customer_home():
     # print(UserRole.CUSTOMER.value)
     return render_template("customerLayout/index.html", menu=menu)
 
+
 @app.route("/customer/book", methods=["GET", "POST"])
 @login_required
 def customer_book():
@@ -45,6 +46,32 @@ def customer_book():
         services=dao.get_services(),
         time_slots=dao.generate_time_slots()
     )
+
+@app.route("/customer/profile")
+def customer_profile():
+    menu = dao.load_menu(UserRole.CUSTOMER.value)
+    return render_template("customerLayout/profile.html", menu=menu)
+
+@app.route("/customer/book")
+def customer_book():
+    menu = dao.load_menu(UserRole.CUSTOMER.value)
+    date = request.args.get("date")
+    time = request.args.get("time")
+    services = Service.query.filter(Service.active == True).all()
+    return render_template("receptionistLayout/book.html", date=date, time=time, services=services, menu=menu)
+
+
+@app.route("/customer/history")
+def customer_history():
+    menu = dao.load_menu(UserRole.CUSTOMER.value)
+    return render_template("customerLayout/history.html", menu=menu)
+
+@app.route("/customer/appointments")
+def customer_appointments():
+    menu = dao.load_menu(UserRole.CUSTOMER.value)
+    return render_template("customerLayout/appointments.html", menu=menu)
+
+
 
 @app.route("/receptionist/")
 def receptionist_home():

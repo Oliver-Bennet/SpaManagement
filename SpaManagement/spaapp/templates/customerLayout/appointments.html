@@ -1,0 +1,36 @@
+{% extends "layout/base.html" %}
+{% block title %}Chỉnh sửa lịch hẹn{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mt-3 text-success">Chỉnh sửa lịch hẹn #123 <small class="text-muted">(nếu có lịch)</small></h3>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Dịch vụ</label>
+                    <p class="form-control-plaintext">Massage thư giãn</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Ngày</label>
+                    <p class="form-control-plaintext">10 Tháng 12 2025</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Giờ</label>
+                    <p class="form-control-plaintext">14:00 - 15:30</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">KTV</label>
+                    <p class="form-control-plaintext">Minh</p>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button class="btn btn-success me-2">Lưu thay đổi</button>
+                <button class="btn btn-secondary">Hủy bỏ và quay lại</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
