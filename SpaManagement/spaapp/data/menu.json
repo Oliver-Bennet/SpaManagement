@@ -22,7 +22,7 @@
 
   "5": [
     {"url": "/customer/", "text": "Trang chủ"},
-    {"url": "/customer/book/", "text": "Đặt lịch mới"},
+    {"url": "/customer/book", "text": "Đặt lịch mới"},
     {"url": "/customer/appointments", "text": "Lịch hẹn của tôi"},
     {"url": "/customer/history", "text": "Lịch sử dịch vụ"},
     {"url": "/customer/profile", "text": "Hồ sơ cá nhân"}

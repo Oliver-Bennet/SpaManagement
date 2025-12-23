@@ -5,15 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1719e2e4-e1cb-45ef-9a71-05cd8069f263" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/spaapp/templates/customerLayout/book.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/dao.py" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/dao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/data/menu.json" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/data/menu.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/spaapp/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/index.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spaapp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/book.html" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/book.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/calendar.html" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/calendar.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -28,6 +39,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python.app.executor": "Run",
     "Python.index.executor": "Run",
@@ -113,8 +125,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.app" />
-        <item itemvalue="Python.seed" />
         <item itemvalue="Python.index" />
+        <item itemvalue="Python.seed" />
       </list>
     </recent_temporary>
   </component>

@@ -1,6 +1,7 @@
-{%extends 'layout/base_public.html'%}
+{% extends 'layout/base_public.html' %}
 {% block sidebar %}{% endblock %}
-{%block content%}
+
+{% block content %}
 
 <section class="hero text-start container mt-3">
     <h1>WELCOME TO TDSPA</h1>
@@ -10,7 +11,20 @@
         khách hàng trong nước và khách hàng nước ngoài.
     </p>
 
-    <button class="btn btn-primary mt-3">Đặt lịch</button>
+    {% if current_user.is_authenticated %}
+        <!-- ĐÃ ĐĂNG NHẬP -->
+
+        <a href="/customer/book"
+           class="btn btn-primary mt-3">
+            Đặt lịch
+        </a>
+    {% else %}
+        <!-- CHƯA ĐĂNG NHẬP -->
+        <a href="/login?next=/customer/book"
+           class="btn btn-primary mt-3">
+            Đặt lịch
+        </a>
+    {% endif %}
 </section>
 
 <section class="service-section mt-3">
@@ -28,4 +42,4 @@
     </div>
 </section>
 
-{%endblock%}
+{% endblock %}

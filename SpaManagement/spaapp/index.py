@@ -1,11 +1,11 @@
 import cloudinary
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for, abort, flash
 from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
 from spaapp.models import UserRole, User, Service
 from datetime import date, datetime, timedelta
-from dao import get_schedule_by_date, TIME_SLOTS
+from dao import get_schedule_by_date
 from datetime import  date
 from types import SimpleNamespace
 
@@ -20,6 +20,32 @@ def customer_home():
     # print(UserRole.CUSTOMER.value)
     return render_template("customerLayout/index.html", menu=menu)
 
+@app.route("/customer/book", methods=["GET", "POST"])
+@login_required
+def customer_book():
+    if current_user.role != UserRole.CUSTOMER:
+        abort(403)
+
+    if request.method == "POST":
+        dao.create_appointment(
+            customer_id=current_user.id,
+            technician_id=request.form.get("technician_id"),
+            service_id=request.form.get("service_id"),
+            appointment_date=request.form.get("date"),
+            start_time=request.form.get("start_time"),
+            note=request.form.get("note"),
+            created_by=current_user.id
+        )
+
+        flash("Đặt lịch thành công! Kỹ thuật viên sẽ được phân công tự động.", "success")
+        return redirect(url_for("customer_book"))
+
+    return render_template(
+        "customerLayout/book.html",
+        services=dao.get_services(),
+        time_slots=dao.generate_time_slots()
+    )
+
 @app.route("/receptionist/")
 def receptionist_home():
     menu = dao.load_menu(UserRole.RECEPTIONIST.value)
@@ -27,7 +53,10 @@ def receptionist_home():
     return render_template("receptionistLayout/index.html", today=today, menu=menu)
 
 @app.route("/receptionist/calendar")
-def calendar():
+@login_required
+def receptionist_calendar():
+    if current_user.role != UserRole.RECEPTIONIST:
+        abort(403)
     today = datetime.now().date()
     selected_date = request.args.get("date")
 
@@ -38,7 +67,7 @@ def calendar():
 
     days = [today + timedelta(days=i) for i in range(-1, 6)]
 
-    schedule = get_schedule_by_date(selected_date.strftime("%Y-%m-%d"))
+    schedule = get_schedule_by_date(selected_date)
     return render_template("receptionistLayout/calendar.html",
                            days=days,
                            selected_date=selected_date,
@@ -47,7 +76,10 @@ def calendar():
                            today=date.today()
                            )
 @app.route("/receptionist/book")
-def book():
+@login_required
+def receptionist_book():
+    if current_user.role != UserRole.RECEPTIONIST:
+        abort(403)
     date = request.args.get("date")
     time = request.args.get("time")
     services = Service.query.filter(Service.active == True).all()
@@ -57,6 +89,8 @@ def book():
 @app.route("/technician")
 @login_required
 def technician_home():
+    if current_user.role != UserRole.TECHNICIAN:
+        abort(403)
     today = date.today()
     appointments = dao.get_appointments_by_technician(
         technician_id=current_user.id,
@@ -159,7 +193,7 @@ def login():
         # print(type(current_user.role), current_user.role)
 
         return redirect(url_for(
-            role_map.get(UserRole(current_user.role), "customer_home")
+            role_map.get(current_user.role, "customer_home")
         ))
 
     err_msg = None
@@ -179,11 +213,15 @@ def login():
                 return redirect(next)
             
             return redirect(url_for(
-                role_map.get(UserRole(user.role), "customer_home")
+                role_map.get(user.role, "customer_home")
             ))
 
         else:
             err_msg = "Tài khoản hoặc mật khẩu không đúng!"
+
+        # xử lý đăng nhập...
+        next_page = request.args.get("next")
+        return redirect(next_page or url_for("index"))
 
     return render_template("login.html", err_msg=err_msg)
 
