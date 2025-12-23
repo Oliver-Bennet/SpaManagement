@@ -1,11 +1,12 @@
 import json
 import hashlib
-from datetime import date
+import random
+from datetime import date, datetime, timedelta
 
 from flask_sqlalchemy import SQLAlchemy
 from unicodedata import category
 
-from spaapp.models import User, UserRole, Category, Bill, Product, BillProduct, Appointment
+from spaapp.models import User, UserRole, Category, Bill, Product, BillProduct, Appointment, Service
 from spaapp import db
 
 
@@ -52,10 +53,37 @@ appointments = [
     }
 ]
 
-TIME_SLOTS = ["09:00", "10:30", "14:30", "15:30"]
+def get_services():
+    return Service.query.filter_by(active=True).all()
+
+def get_technicians():
+    return User.query.filter_by(role=UserRole.TECHNICIAN).all()
+
+def get_customers():
+    return User.query.filter_by(role=UserRole.CUSTOMER).all()
+
+def generate_time_slots(start="09:00", end="17:00", step=60):
+    slots = []
+
+    cur = datetime.strptime(start, "%H:%M")
+    end_time = datetime.strptime(end, "%H:%M")
+
+    while cur < end_time:
+        slots.append(cur.strftime("%H:%M"))
+        cur += timedelta(minutes=step)
+
+    return slots
+
+def get_random_technician():
+    techs = User.query.filter(
+        User.role == "3",
+        User.active == True
+    ).all()
+    return random.choice(techs) if techs else None
 
 def get_schedule_by_date(date):
     result = {}
+    TIME_SLOTS = generate_time_slots()
     for t in TIME_SLOTS:
         result[t] = None
 
@@ -159,26 +187,37 @@ def get_appointment_by_id(appt_id):
     return Appointment.query.get(appt_id)
 
 #Tao lich hen moi (cho le tan va khach)
-def create_appointment(
-    customer_id,
-    technician_id,
-    service_id,
-    appointment_date,
-    start_time,
-    end_time
-):
+def create_appointment(customer_id, technician_id, service_id,
+                       appointment_date, start_time, note, created_by):
+
+    service = Service.query.get(service_id)
+    if not service:
+        return None
+
+    technician = get_random_technician()
+    if not technician_id:
+        tech = get_random_technician()
+        if not tech:
+            raise Exception("Không có kỹ thuật viên khả dụng")
+
+    start = datetime.strptime(start_time, "%H:%M")
+    end = start + timedelta(minutes=service.duration_minute)
+
     appt = Appointment(
         customer_id=customer_id,
         technician_id=technician_id,
         service_id=service_id,
         appointment_date=appointment_date,
-        start_time=start_time,
-        end_time=end_time,
-        status="PENDING"
+        start_time=start.time(),
+        end_time=end.time(),
+        note=note,
+        created_by=created_by,
+        status="pending"
     )
 
     db.session.add(appt)
     db.session.commit()
+
     return appt
 
 #Hoan thanh dich vu (Dong bang)

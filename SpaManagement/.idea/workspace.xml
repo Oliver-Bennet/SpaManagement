@@ -4,6 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+
+    <list default="true" id="1719e2e4-e1cb-45ef-9a71-05cd8069f263" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/spaapp/templates/customerLayout/book.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/dao.py" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/dao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/data/menu.json" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/data/menu.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/index.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/book.html" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/book.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/calendar.html" beforeDir="false" afterPath="$PROJECT_DIR$/spaapp/templates/receptionistLayout/calendar.html" afterDir="false" />
+
     <list default="true" id="4e735741-a832-42f2-bb37-42e3eeb81cbb" name="Changes" comment="">
       <change afterPath="$PROJECT_DIR$/spaapp/templates/customerLayout/appointments.html" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/spaapp/templates/customerLayout/history.html" afterDir="false" />
@@ -90,6 +101,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.app" />
+
+        <item itemvalue="Python.index" />
+        <item itemvalue="Python.seed" />
+
       </list>
     </recent_temporary>
   </component>

@@ -25,22 +25,23 @@
         </select>
 
         <div class="mt-1 mb-3">
-            <label>Ngày</label>
-            <input class="form-control" value="{{ date }}" readonly>
+            <label class="form-label">Ngày</label>
+            <input type="date"
+                   id="booking-date"
+                   name="date"
+                   class="form-control"
+                   required>
+            <small class="text-danger d-none" id="date-error">
+                ❌ Ngày đã qua, vui lòng chọn lại!
+            </small>
         </div>
 
-        <div class="mb-3">
-            <label>Giờ</label>
-            <input class="form-control" value="{{ time }}" readonly>
-        </div>
-
-        <select class="form-select mb-3" name="technician_id" required>
-            <option value="">-- Chọn nhân viên thực hiện --</option>
-            {% for t in technicians %}
-            <option value="{{ t.id }}">{{ t.full_name }}</option>
+        <select class="form-select mb-3" name="start_time" required>
+            <option value="">-- Chọn giờ --</option>
+            {% for t in time_slots %}
+            <option value="{{ t }}">{{ t }}</option>
             {% endfor %}
         </select>
-
 
         <div class="form-floating mb-3">
             <textarea class="form-control" id="note" name="note" placeholder="Ghi chú lễ tân"></textarea>
@@ -53,8 +54,31 @@
         </div>
 
 
-        <button class="btn btn-primary">Đặt lịch và in phiếu cho khách</button>
-        <button class="btn btn-primary">Chỉ đặt lịch cho khách</button>
+        <button class="btn btn-primary">Đặt lịch</button>
     </form>
 </div>
+
+<script>
+    const dateInput = document.getElementById("booking-date");
+    const errorText = document.getElementById("date-error");
+
+    // Lấy ngày hôm nay theo local time (yyyy-mm-dd)
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    // Không cho chọn ngày trước hôm nay
+    dateInput.min = todayStr;
+
+    dateInput.addEventListener("change", function () {
+        if (this.value < todayStr) {
+            errorText.classList.remove("d-none");
+            this.value = ""; // reset
+        } else {
+            errorText.classList.add("d-none");
+        }
+    });
+</script>
 {% endblock %}
