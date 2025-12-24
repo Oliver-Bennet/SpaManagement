@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from unicodedata import category
 
-from spaapp.models import User, UserRole, Category, Bill, Product, BillProduct, Appointment, Service
+from spaapp.models import User, UserRole, Category, Bill, Product, BillProduct, Appointment, Service, SystemConfig
 from spaapp import db
 
 
@@ -53,6 +53,26 @@ appointments = [
     }
 ]
 
+def add_product_to_bill(bill_id, product_id, quantity):
+    product = Product.query.get(product_id)
+    bill = Bill.query.get(bill_id)
+
+    subtotal = product.price * quantity
+
+    bp = BillProduct(
+        bill_id=bill_id,
+        product_id=product_id,
+        quantity=quantity,
+        unit_price=product.price,
+        subtotal=subtotal
+    )
+
+    bill.product_amount += subtotal
+    bill.total_amount = bill.service_amount + bill.product_amount
+
+    db.session.add(bp)
+    db.session.commit()
+
 def get_services():
     return Service.query.filter_by(active=True).all()
 
@@ -80,6 +100,28 @@ def get_random_technician():
         User.active == True
     ).all()
     return random.choice(techs) if techs else None
+
+def get_available_technicians(date, time):
+    max_appt = SystemConfig.query.first().max_appointments_per_tech_per_day
+
+    techs = User.query.filter(
+        User.role == UserRole.TECHNICIAN,
+        User.active == True
+    ).all()
+
+    available = []
+
+    for t in techs:
+        count = Appointment.query.filter(
+            Appointment.technician_id == t.id,
+            Appointment.appointment_date == date
+        ).count()
+
+        if count < max_appt:
+            available.append(t)
+
+    return available
+
 
 def get_schedule_by_date(date):
     result = {}
@@ -174,6 +216,18 @@ def get_bills_for_today():
         bills.append(bill_info)
     return bills
 
+def create_bill_from_appointment(appt):
+    bill = Bill(
+        appointment_id=appt.id,
+        customer_id=appt.customer_id,
+        service_amount=appt.service.price if appt.service else appt.package.price,
+        total_amount=appt.service.price if appt.service else appt.package.price,
+        cashier_id=appt.created_by
+    )
+    db.session.add(bill)
+    db.session.commit()
+
+
 #Trang chu KTV va xem lich tung ngay
 def get_appointments_by_technician(technician_id, date):
     return Appointment.query.filter(
@@ -187,38 +241,41 @@ def get_appointment_by_id(appt_id):
     return Appointment.query.get(appt_id)
 
 #Tao lich hen moi (cho le tan va khach)
-def create_appointment(customer_id, technician_id, service_id,
-                       appointment_date, start_time, note, created_by):
+def create_appointment(customer_id, service_id,
+                       appointment_date, start_time,
+                       note, created_by):
+
+    appointment_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+    start_time = datetime.strptime(start_time, "%H:%M").time()
 
     service = Service.query.get(service_id)
-    if not service:
-        return None
 
-    technician = get_random_technician()
-    if not technician_id:
-        tech = get_random_technician()
-        if not tech:
-            raise Exception("Không có kỹ thuật viên khả dụng")
+    end_time = (
+        datetime.combine(date.today(), start_time)
+        + timedelta(minutes=service.duration_minute)
+    ).time()
 
-    start = datetime.strptime(start_time, "%H:%M")
-    end = start + timedelta(minutes=service.duration_minute)
+    techs = get_available_technicians(appointment_date)
+
+    if not techs:
+        raise Exception("Không có kỹ thuật viên khả dụng")
+
+    technician = random.choice(techs)
 
     appt = Appointment(
         customer_id=customer_id,
-        technician_id=technician_id,
         service_id=service_id,
+        technician_id=technician.id,
         appointment_date=appointment_date,
-        start_time=start.time(),
-        end_time=end.time(),
+        start_time=start_time,
+        end_time=end_time,
+        status="pending",
         note=note,
-        created_by=created_by,
-        status="pending"
+        created_by=created_by
     )
 
     db.session.add(appt)
     db.session.commit()
-
-    return appt
 
 #Hoan thanh dich vu (Dong bang)
 def complete_appointment(appt_id, note=None):
@@ -254,3 +311,11 @@ def cancel_appointment(appt_id):
         appt.active = False
         db.session.commit()
     return appt
+
+def serialize_appointment(appt):
+    return {
+        "customer": appt.get_customer_name(),
+        "service": appt.get_service_name(),
+        "time": f"{appt.start_time} - {appt.end_time}",
+        "status": appt.status
+    }
