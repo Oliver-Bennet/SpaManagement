@@ -18,8 +18,8 @@
             <option value="">-- Chọn dịch vụ --</option>
 
             {% for s in services %}
-            <option value="{{ s.id }}">
-                {{ s.name }}
+            <option value="{{ s.id }}" data-duration="{{ s.duration_minute }}">
+                {{ s.name }} ({{ s.duration_minute }} phút)
             </option>
             {% endfor %}
         </select>
@@ -41,6 +41,7 @@
             {% for t in time_slots %}
             <option value="{{ t }}">{{ t }}</option>
             {% endfor %}
+
         </select>
 
         <div class="form-floating mb-3">
@@ -54,7 +55,9 @@
         </div>
 
 
-        <button class="btn btn-primary">Đặt lịch</button>
+        <button type="submit" class="btn btn-success">
+            Đặt lịch
+        </button>
     </form>
 </div>
 

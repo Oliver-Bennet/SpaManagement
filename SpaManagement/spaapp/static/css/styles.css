@@ -1,0 +1,212 @@
+/* =====================
+   RESET & BASE
+===================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background-color: #f5f6fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* =====================
+   LAYOUT
+===================== */
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* =====================
+   BUTTONS
+===================== */
+.btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #219150;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-secondary {
+    background-color: #7f8c8d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #636e72;
+}
+
+/* =====================
+   FORMS
+===================== */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #27ae60;
+}
+
+/* =====================
+   BOOKING TIME SLOTS
+===================== */
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.time-slot {
+    padding: 10px;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: #ecf0f1;
+    border: 1px solid #ccc;
+    transition: 0.2s;
+}
+
+.time-slot:hover {
+    background-color: #dfe6e9;
+}
+
+.time-slot.selected {
+    background-color: #27ae60;
+    color: white;
+    border-color: #27ae60;
+}
+
+.time-slot.disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    color: #777;
+}
+
+/* =====================
+   CALENDAR (RECEPTIONIST)
+===================== */
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.calendar-day {
+    padding: 12px;
+    background-color: white;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.calendar-day.today {
+    border: 2px solid #27ae60;
+}
+
+.calendar-day a {
+    text-decoration: none;
+    color: #333;
+}
+
+/* =====================
+   APPOINTMENT CARD
+===================== */
+.appointment-card {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 5px solid #27ae60;
+    margin-bottom: 15px;
+}
+
+.appointment-card.pending {
+    border-left-color: #f39c12;
+}
+
+.appointment-card.done {
+    border-left-color: #3498db;
+}
+
+/* =====================
+   ALERT / FLASH MESSAGE
+===================== */
+.alert {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.alert-success {
+    background-color: #dff0d8;
+    color: #3c763d;
+}
+
+.alert-error {
+    background-color: #f2dede;
+    color: #a94442;
+}
+
+/* =====================
+   NAVBAR (OPTIONAL)
+===================== */
+
+
+.navbar a {
+    color: white;
+    margin-right: 15px;
+    text-decoration: none;
+    font-weight: bold;
+}
+

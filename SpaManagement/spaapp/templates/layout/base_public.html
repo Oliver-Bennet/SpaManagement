@@ -9,6 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
             crossorigin="anonymous"></script>
+    <!--suppress HtmlUnknownTarget -->
+    <link href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
+    <!--suppress HtmlUnknownTarget -->
+    <script src="{{url_for('static', filename='js/booking.js')}}"></script>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -21,6 +25,19 @@
         {% block content %}{% endblock %}
     </div>
 </div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="container mt-3">
+    {% for category, msg in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
 
 {% block footer %}
     {% include 'layout/footer.html' %}

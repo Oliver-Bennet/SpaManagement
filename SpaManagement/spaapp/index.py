@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, abort, fla
 from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
-from spaapp.models import UserRole, User, Service
+from spaapp.models import UserRole, User, Service, Bill
 from datetime import date, datetime, timedelta
 from dao import get_schedule_by_date
 from datetime import  date
@@ -28,17 +28,19 @@ def customer_book():
         abort(403)
 
     if request.method == "POST":
-        dao.create_appointment(
-            customer_id=current_user.id,
-            technician_id=request.form.get("technician_id"),
-            service_id=request.form.get("service_id"),
-            appointment_date=request.form.get("date"),
-            start_time=request.form.get("start_time"),
-            note=request.form.get("note"),
-            created_by=current_user.id
-        )
+        try:
+            dao.create_appointment(
+                customer_id=current_user.id,
+                service_id=request.form.get("service_id"),
+                appointment_date=request.form.get("date"),
+                start_time=request.form.get("start_time"),
+                note=request.form.get("note"),
+                created_by=current_user.id
+            )
+            flash("Đặt lịch thành công!", "success")
+        except Exception as e:
+            flash(str(e), "error")
 
-        flash("Đặt lịch thành công! Kỹ thuật viên sẽ được phân công tự động.", "success")
         return redirect(url_for("customer_book"))
 
     return render_template(
@@ -52,13 +54,13 @@ def customer_profile():
     menu = dao.load_menu(UserRole.CUSTOMER.value)
     return render_template("customerLayout/profile.html", menu=menu)
 
-@app.route("/customer/book")
-def customer_book():
-    menu = dao.load_menu(UserRole.CUSTOMER.value)
-    date = request.args.get("date")
-    time = request.args.get("time")
-    services = Service.query.filter(Service.active == True).all()
-    return render_template("receptionistLayout/book.html", date=date, time=time, services=services, menu=menu)
+# @app.route("/customer/book")
+# def customer_book():
+#     menu = dao.load_menu(UserRole.CUSTOMER.value)
+#     date = request.args.get("date")
+#     time = request.args.get("time")
+#     services = Service.query.filter(Service.active == True).all()
+#     return render_template("receptionistLayout/book.html", date=date, time=time, services=services, menu=menu)
 
 
 @app.route("/customer/history")
@@ -119,11 +121,11 @@ def technician_home():
     if current_user.role != UserRole.TECHNICIAN:
         abort(403)
     today = date.today()
-    appointments = dao.get_appointments_by_technician(
-        technician_id=current_user.id,
-        date=today
-    )
-
+    # appointments = dao.get_appointments_by_technician(
+    #     technician_id=current_user.id,
+    #     date=today
+    # )
+    appointments = dao.get_appointments_by_technician(current_user.id, today)
     #Tao lich gia
     # fake_appt = SimpleNamespace(
     #     id=1,
@@ -134,10 +136,12 @@ def technician_home():
     #     service=SimpleNamespace(name="Massage thư giãn"),
     #     package=None
     # )
+    data = [dao.serialize_appointment(a) for a in appointments]
     return render_template(
         "technicianLayout/index.html",
         today=today,
         today_appointments=appointments,
+        appointments=data
         # today_appointments = [fake_appt]
     )
 
@@ -148,6 +152,7 @@ def technician_record(appt_id):
 
     if request.method == "POST":
         appt.status = "DONE"
+        dao.create_bill_from_appointment(appt)
         db.session.commit()
         return redirect(url_for("technician_home"))
 
@@ -179,6 +184,18 @@ def cashier_home():
 def bill_new(id):
     data = dao.get_bill_data(1)
     return render_template("cashierLayout/bill.html", data=data)
+
+def create_bill_from_appointment(appt):
+    bill = Bill(
+        appointment_id=appt.id,
+        customer_id=appt.customer_id,
+        service_amount=appt.service.price if appt.service else appt.package.price,
+        total_amount=appt.service.price if appt.service else appt.package.price,
+        cashier_id=appt.created_by
+    )
+    db.session.add(bill)
+    db.session.commit()
+
 
 # @app.route("/admin/")
 # def admin_home():
