@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Numeric, Text, Date, Time,  ForeignKey, Enum
 from enum import Enum as RoleEnum
 from flask_login import UserMixin
+from sqlalchemy.orm import validates
+
 from spaapp import db
 
 class Category(db.Model):
@@ -85,6 +87,12 @@ class Service(Base):#, ServiceComponent):
 
     def __str__(self):
         return self.name
+
+    @validates('duration_minute')
+    def validate_duration(self, key, duration):
+        if duration < 15 or duration > 120:
+            raise ValueError("Thời lượng dịch vụ phải từ 15 đến 120 phút theo quy định!")
+        return duration
 #3
 class ServicePackage(Base):
     __tablename__ = 'service_packages'
