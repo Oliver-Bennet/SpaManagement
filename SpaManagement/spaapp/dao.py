@@ -8,6 +8,7 @@ from unicodedata import category
 
 from spaapp.models import User, UserRole, Category, Bill, Product, BillProduct, Appointment, Service, SystemConfig
 from spaapp import db
+from sqlalchemy import extract, func
 
 
 def get_user_by_id(user_id):
@@ -101,26 +102,21 @@ def get_random_technician():
     ).all()
     return random.choice(techs) if techs else None
 
-def get_available_technicians(date, time):
-    max_appt = SystemConfig.query.first().max_appointments_per_tech_per_day
+def get_available_technician(date):
+    config = SystemConfig.query.first()
+    max_per_day = config.max_appointments_per_tech_per_day
 
-    techs = User.query.filter(
+    technicians = User.query.filter(
         User.role == UserRole.TECHNICIAN,
         User.active == True
     ).all()
 
     available = []
-
-    for t in techs:
-        count = Appointment.query.filter(
-            Appointment.technician_id == t.id,
-            Appointment.appointment_date == date
-        ).count()
-
-        if count < max_appt:
+    for t in technicians:
+        if count_appointments_of_technician(t.id, date) < max_per_day:
             available.append(t)
 
-    return available
+    return random.choice(available) if available else None
 
 
 def get_schedule_by_date(date):
@@ -217,13 +213,22 @@ def get_bills_for_today():
     return bills
 
 def create_bill_from_appointment(appt):
+    config = SystemConfig.query.first()
+    vat = config.vat_percent
+
+    price = appt.service.price if appt.service else appt.package.price
+    vat_amount = price * vat / 100
+    total = price + vat_amount
+
     bill = Bill(
         appointment_id=appt.id,
         customer_id=appt.customer_id,
-        service_amount=appt.service.price if appt.service else appt.package.price,
-        total_amount=appt.service.price if appt.service else appt.package.price,
+        service_amount=price,
+        vat_percent=vat,
+        total_amount=total,
         cashier_id=appt.created_by
     )
+
     db.session.add(bill)
     db.session.commit()
 
@@ -243,7 +248,7 @@ def get_appointment_by_id(appt_id):
 #Tao lich hen moi (cho le tan va khach)
 def create_appointment(customer_id, service_id,
                        appointment_date, start_time,
-                       note, created_by):
+                       note, created_by, technician_id=None):
 
     appointment_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
     start_time = datetime.strptime(start_time, "%H:%M").time()
@@ -255,12 +260,13 @@ def create_appointment(customer_id, service_id,
         + timedelta(minutes=service.duration_minute)
     ).time()
 
-    techs = get_available_technicians(appointment_date)
+    if technician_id:
+        technician = User.query.get(int(technician_id))
+    else:
+        technician = get_available_technician(appointment_date)
 
-    if not techs:
+    if not technician:
         raise Exception("Không có kỹ thuật viên khả dụng")
-
-    technician = random.choice(techs)
 
     appt = Appointment(
         customer_id=customer_id,
@@ -319,3 +325,11 @@ def serialize_appointment(appt):
         "time": f"{appt.start_time} - {appt.end_time}",
         "status": appt.status
     }
+
+#5 khach/ktv/ngay
+def count_appointments_of_technician(technician_id, date):
+    return Appointment.query.filter(
+        Appointment.technician_id == technician_id,
+        Appointment.appointment_date == date,
+        Appointment.active == True
+    ).count()

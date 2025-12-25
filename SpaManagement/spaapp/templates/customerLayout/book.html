@@ -2,15 +2,25 @@
 {% block content %}
 <div class="container py-5">
     <h3 style="text-align: center">Đặt lịch dịch vụ</h3>
-
-    <form method="post">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <!--suppress HtmlUnknownTarget -->
+    <form method="post" action="{{ url_for('customer_book') }}">
         <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" placeholder="Họ tên khách hàng">
+            <input type="text" class="form-control" name="full_name" placeholder="Họ tên khách hàng">
             <label>Họ tên khách hàng</label>
         </div>
 
         <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" placeholder="SĐT">
+            <input type="text" class="form-control" name="phone" placeholder="SĐT">
             <label>SĐT</label>
         </div>
 

@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, abort, fla
 from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
-from spaapp.models import UserRole, User, Service, Bill
+from spaapp.models import UserRole, User, Service, Bill, ServiceRecord
 from datetime import date, datetime, timedelta
 from dao import get_schedule_by_date
 from datetime import  date
@@ -26,7 +26,7 @@ def customer_home():
 def customer_book():
     if current_user.role != UserRole.CUSTOMER:
         abort(403)
-
+    menu = dao.load_menu(UserRole.CUSTOMER.value)
     if request.method == "POST":
         try:
             dao.create_appointment(
@@ -46,7 +46,8 @@ def customer_book():
     return render_template(
         "customerLayout/book.html",
         services=dao.get_services(),
-        time_slots=dao.generate_time_slots()
+        time_slots=dao.generate_time_slots(),
+        menu=menu
     )
 
 @app.route("/customer/profile")
@@ -86,6 +87,7 @@ def receptionist_home():
 def receptionist_calendar():
     if current_user.role != UserRole.RECEPTIONIST:
         abort(403)
+    menu = dao.load_menu(UserRole.RECEPTIONIST.value)
     today = datetime.now().date()
     selected_date = request.args.get("date")
 
@@ -102,17 +104,46 @@ def receptionist_calendar():
                            selected_date=selected_date,
                            schedule=schedule,
                            now=datetime.now,
-                           today=date.today()
+                           today=date.today(),
+                           menu=menu
                            )
-@app.route("/receptionist/book")
+@app.route("/receptionist/book", methods=["GET", "POST"])
 @login_required
 def receptionist_book():
     if current_user.role != UserRole.RECEPTIONIST:
         abort(403)
+
+    menu = dao.load_menu(UserRole.RECEPTIONIST.value)
+
     date = request.args.get("date")
     time = request.args.get("time")
-    services = Service.query.filter(Service.active == True).all()
-    return render_template("receptionistLayout/book.html", date=date, time=time, services=services)
+
+    technicians = dao.get_technicians()
+    services = dao.get_services()
+
+    if request.method == "POST":
+        try:
+            dao.create_appointment(
+                customer_id=current_user.id,  # tạm dùng user lễ tân
+                service_id=request.form.get("service_id"),
+                appointment_date=request.form.get("date"),
+                start_time=request.form.get("start_time"),
+                technician_id=request.form.get("technician_id"),  # ✅ QUAN TRỌNG
+                note=request.form.get("note"),
+                created_by=current_user.id
+            )
+            flash("Đặt lịch thành công!", "success")
+        except Exception as e:
+            flash(str(e), "danger")
+
+    return render_template(
+        "receptionistLayout/book.html",
+        date=date,
+        time=time,
+        services=services,
+        technicians=technicians,
+        menu=menu
+    )
 
 #KTV
 @app.route("/technician")
@@ -153,6 +184,13 @@ def technician_record(appt_id):
     if request.method == "POST":
         appt.status = "DONE"
         dao.create_bill_from_appointment(appt)
+        appt.status = "DONE"
+        appt_record = ServiceRecord(
+            appointment_id=appt.id,
+            actual_start=datetime.now(),
+            actual_end=datetime.now()
+        )
+        db.session.add(appt_record)
         db.session.commit()
         return redirect(url_for("technician_home"))
 
@@ -197,10 +235,10 @@ def create_bill_from_appointment(appt):
     db.session.commit()
 
 
-# @app.route("/admin/")
-# def admin_home():
-#     menu = dao.load_menu(UserRole.MANAGER.value)
-#     return render_template("admin/index.html", menu=menu)
+@app.route("/admin/")
+def admin_home():
+    menu = dao.load_menu(UserRole.MANAGER.value)
+    return render_template("admin/index.html", menu=menu)
 
 # @app.route("/admin/user/")
 # @login_required
@@ -226,7 +264,7 @@ def get_user(user_id):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     role_map = {
-        UserRole.MANAGER: "admin.index",
+        UserRole.MANAGER: "admin_home",
         UserRole.RECEPTIONIST: "receptionist_home",
         UserRole.TECHNICIAN: "technician_home",
         UserRole.CASHIER: "cashier_home",

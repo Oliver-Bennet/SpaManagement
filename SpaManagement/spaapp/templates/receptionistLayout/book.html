@@ -2,15 +2,25 @@
 {% block content %}
 <div class="container py-5">
     <h3 style="text-align: center">Đặt lịch dịch vụ</h3>
-
-    <form method="post">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <!--suppress HtmlUnknownTarget -->
+    <form method="post" action="{{ url_for('receptionist_book') }}">
         <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" placeholder="Họ tên khách hàng">
+            <input type="text" class="form-control" name="full_name" placeholder="Họ tên khách hàng">
             <label>Họ tên khách hàng</label>
         </div>
 
         <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" placeholder="SĐT">
+            <input type="text" class="form-control" name="phone" placeholder="SĐT">
             <label>SĐT</label>
         </div>
 
@@ -26,12 +36,12 @@
 
         <div class="mt-1 mb-3">
             <label>Ngày</label>
-            <input class="form-control" value="{{ date }}" readonly>
+            <input class="form-control" name="date" value="{{ date }}" readonly>
         </div>
 
         <div class="mb-3">
             <label>Giờ</label>
-            <input class="form-control" value="{{ time }}" readonly>
+            <input class="form-control" name="start_time" value="{{ time }}" readonly>
         </div>
 
         <select class="form-select mb-3" name="technician_id" required>
