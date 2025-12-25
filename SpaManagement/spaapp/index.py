@@ -16,9 +16,15 @@ def home():
 @app.route("/customer/")
 def customer_home():
     menu = dao.load_menu(UserRole.CUSTOMER.value)
-    # print(menu)
-    # print(UserRole.CUSTOMER.value)
-    return render_template("customerLayout/index.html", menu=menu)
+    upcoming_appts = dao.get_upcoming_appointments_by_customer(current_user.id)
+    total_spending, monthly_spending = dao.get_customer_spending_stats(current_user.id)
+    return render_template("customerLayout/index.html",
+                           menu=menu,
+                           now=datetime.now,
+                           upcoming_appointments=upcoming_appts,
+                           total_spending=total_spending,
+                           monthly_spending=monthly_spending
+                           )
 
 
 @app.route("/customer/book", methods=["GET", "POST"])
@@ -151,29 +157,29 @@ def receptionist_book():
 def technician_home():
     if current_user.role != UserRole.TECHNICIAN:
         abort(403)
+
+    # Lấy ngày từ URL hoặc mặc định là hôm nay ---
+    date_str = request.args.get("date")
     today = date.today()
-    # appointments = dao.get_appointments_by_technician(
-    #     technician_id=current_user.id,
-    #     date=today
-    # )
-    appointments = dao.get_appointments_by_technician(current_user.id, today)
-    #Tao lich gia
-    # fake_appt = SimpleNamespace(
-    #     id=1,
-    #     start_time="09:00",
-    #     end_time="10:00",
-    #     status="DONE",
-    #     customer=SimpleNamespace(full_name="Nguyễn Văn A"),
-    #     service=SimpleNamespace(name="Massage thư giãn"),
-    #     package=None
-    # )
+
+    if date_str:
+        try:
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            selected_date = today
+    else:
+        selected_date = today
+
+    days = [today + timedelta(days=i) for i in range(-1, 6)]
+    appointments = dao.get_appointments_by_technician(current_user.id, selected_date)
     data = [dao.serialize_appointment(a) for a in appointments]
     return render_template(
         "technicianLayout/index.html",
         today=today,
+        selected_date=selected_date,
+        days=days,
         today_appointments=appointments,
         appointments=data
-        # today_appointments = [fake_appt]
     )
 
 @app.route("/technician/record/<int:appt_id>", methods=["GET", "POST"])
@@ -181,33 +187,34 @@ def technician_home():
 def technician_record(appt_id):
     appt = dao.get_appointment_by_id(appt_id)
 
+    if not appt:
+        return "Không tìm thấy lịch hẹn", 404
+
     if request.method == "POST":
+        tech_note = request.form.get("technician_note")
+        cust_feedback = request.form.get("customer_feedback")
+        rating_val = request.form.get("rating")
+
         appt.status = "DONE"
         dao.create_bill_from_appointment(appt)
-        appt.status = "DONE"
+
         appt_record = ServiceRecord(
             appointment_id=appt.id,
             actual_start=datetime.now(),
-            actual_end=datetime.now()
+            actual_end=datetime.now(),
+            technician_note=tech_note,
+            customer_feedback=cust_feedback,
+            rating=int(rating_val) if rating_val else 5
         )
+
         db.session.add(appt_record)
         db.session.commit()
-        return redirect(url_for("technician_home"))
 
-    # fake_appt = SimpleNamespace(
-    #     id=appt_id,
-    #     start_time="09:00",
-    #     end_time="10:00",
-    #     status="PENDING",
-    #     customer=SimpleNamespace(full_name="Nguyễn Văn A"),
-    #     service=SimpleNamespace(name="Massage thư giãn"),
-    #     package=None
-    # )
+        flash("Đã hoàn thành dịch vụ và lưu hồ sơ!", "success")
 
     return render_template(
         "technicianLayout/record.html",
         appt=appt
-        # appt=fake_appt
     )
 
 @app.route("/cashier/")

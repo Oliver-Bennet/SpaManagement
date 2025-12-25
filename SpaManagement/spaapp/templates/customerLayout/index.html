@@ -3,45 +3,56 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h3 class="mt-3 text-success">Chào mừng quay lại, Lan!</h3>
+    <h3 class="mt-3 text-success">Chào mừng quay lại, {{ current_user.full_name }}!</h3>
 
     <div class="row mt-4">
-        <!-- Lịch sắp tới -->
         <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Lịch sắp tới</h5>
+                    <h5 class="mb-0">📅 Lịch sắp tới của bạn</h5>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>14:00</strong> - Massage thư giãn<br>
-                                <small class="text-muted">10/12</small>
-                            </div>
-                            <span class="badge bg-primary">KTV: Minh</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>10:30</strong> - Chăm sóc da<br>
-                                <small class="text-muted">10/12</small>
-                            </div>
-                            <span class="badge bg-primary">KTV: Hương</span>
-                        </li>
+                        {% if upcoming_appointments %}
+                            {% for appt in upcoming_appointments %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="text-primary">{{ appt.start_time.strftime('%H:%M') }}</strong> -
+                                    {{ appt.service.name if appt.service else appt.package.name }}
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        {{ appt.appointment_date.strftime('%d/%m/%Y') }}
+                                    </small>
+                                </div>
+
+                                <span class="badge bg-light text-dark border">
+                                    KTV: {{ appt.technician.full_name }}
+                                </span>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center py-4 text-muted">
+                                Bạn chưa có lịch hẹn nào sắp tới. <br>
+                                <a href="/customer/book" class="btn btn-sm btn-success mt-2">Đặt lịch ngay</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Tổng chi tiêu -->
         <div class="col-lg-4">
             <div class="card shadow-sm text-center bg-light">
                 <div class="card-body">
-                    <h6>Tổng chi tiêu tháng này</h6>
-                    <h3 class="text-danger fw-bold">2.450.000đ</h3>
+                    <h6>Chi tiêu tháng {{ now().month }}/{{ now().year }}</h6> <h3 class="text-danger fw-bold">
+                        {{ "{:,.0f}".format(monthly_spending) }} đ
+                    </h3>
                     <hr>
-                    <h6>Tổng cộng từ trước</h6>
-                    <h4 class="text-success fw-bold">12.800.000đ</h4>
+                    <h6>Tổng chi tiêu tích lũy</h6>
+                    <h4 class="text-success fw-bold">
+                        {{ "{:,.0f}".format(total_spending) }} đ
+                    </h4>
                 </div>
             </div>
         </div>

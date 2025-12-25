@@ -6,29 +6,75 @@
 
     <div class="card shadow">
         <div class="card-header bg-success text-white">
-            <h5 class="mb-0">Ghi nhận tiến trình dịch vụ</h5>
+            <h5 class="mb-0">📋 Ghi nhận tiến trình dịch vụ</h5>
         </div>
 
         <div class="card-body">
-            <p><strong>Khách:</strong> {{ appt.customer.full_name }}</p>
-            <p><strong>Dịch vụ:</strong>
-                {{ appt.service.name or appt.package.name }}
-            </p>
-            <p><strong>Thời gian:</strong>
-                {{ appt.start_time }} - {{ appt.end_time }}
-            </p>
+            <div class="alert alert-info">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>👤 Khách hàng:</strong> {{ appt.customer.full_name }}</p>
+                        <p class="mb-2"><strong>💆 Dịch vụ:</strong>
+                            <span class="text-primary fw-bold">
+                                {{ appt.service.name if appt.service else appt.package.name }}
+                            </span>
+                        </p>
+                        <p class="mb-2"><strong>🕒 Thời gian đặt:</strong> {{ appt.start_time }} - {{ appt.end_time }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>⏳ Thời lượng:</strong>
+                            {% if appt.service %}
+                                {{ appt.service.duration_minute }} phút
+                            {% else %}
+                                {{ appt.package.get_duration() }} phút
+                            {% endif %}
+                        </p>
+
+                        <p class="mb-2"><strong>💰 Giá niêm yết:</strong>
+                            {% if appt.service %}
+                                {{ "{:,.0f}".format(appt.service.price) }} VNĐ
+                            {% else %}
+                                {{ "{:,.0f}".format(appt.package.price) }} VNĐ
+                            {% endif %}
+                        </p>
+
+                        <p class="mb-0"><strong>📝 Ghi chú (Lễ tân):</strong>
+                            <span class="fst-italic text-danger">
+                                {{ appt.note if appt.note else "Không có ghi chú đặc biệt" }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <form method="post">
                 <div class="mb-3">
-                    <label class="form-label">Ghi chú</label>
-                    <textarea class="form-control"
-                              rows="4"
-                              placeholder="Nhập tình trạng khách hàng..."></textarea>
+                    <label class="form-label fw-bold">Ghi chú kỹ thuật (Kết quả/Tình trạng):</label>
+                    <textarea class="form-control" name="technician_note" rows="3"
+                              placeholder="Nhập tình trạng da, các bước đã xử lý..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phản hồi của khách hàng:</label>
+                    <textarea class="form-control" name="customer_feedback" rows="2"
+                              placeholder="Khách hàng có hài lòng không? Yêu cầu gì cho lần sau?"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Đánh giá mức độ hài lòng:</label>
+                    <select class="form-select w-auto" name="rating">
+                        <option value="5" selected>⭐⭐⭐⭐⭐ (Rất hài lòng)</option>
+                        <option value="4">⭐⭐⭐⭐ (Hài lòng)</option>
+                        <option value="3">⭐⭐⭐ (Bình thường)</option>
+                        <option value="2">⭐⭐ (Không hài lòng)</option>
+                        <option value="1">⭐ (Rất tệ)</option>
+                    </select>
                 </div>
 
                 <div class="text-end">
-                    <button class="btn btn-success">
-                        ✔ Hoàn thành dịch vụ
+                    <a href="/technician" class="btn btn-secondary me-2">Quay lại</a>
+                    <button type="submit" class="btn btn-success">
+                        ✔ Hoàn thành & Lưu hồ sơ
                     </button>
                 </div>
             </form>

@@ -34,25 +34,6 @@ def add_user(full_name, username, password, phone, image=None):
     db.session.commit()
     return user
 
-# Lễ tân đặt lịch cho khách
-appointments = [
-{
-        "date": "2025-12-21",
-        "time": "10:30",
-        "customer": "Lan",
-        "service": "Massage",
-        "staff": "Minh",
-        "status": "Đã xác nhận"
-    },
-    {
-        "date": "2025-12-21",
-        "time": "14:30",
-        "customer": "Hoa",
-        "service": "Da mặt",
-        "staff": "Hương",
-        "status": "Đã xác nhận"
-    }
-]
 
 def add_product_to_bill(bill_id, product_id, quantity):
     product = Product.query.get(product_id)
@@ -122,12 +103,21 @@ def get_available_technician(date):
 def get_schedule_by_date(date):
     result = {}
     TIME_SLOTS = generate_time_slots()
+
     for t in TIME_SLOTS:
         result[t] = None
 
-    for a in appointments:
-        if a["date"] == date:
-            result[a["time"]] = a
+    # Lấy các lịch hẹn Active trong ngày từ Database
+    db_appointments = Appointment.query.filter(
+        Appointment.appointment_date == date,
+        Appointment.active == True
+    ).all()
+
+    # Map lịch hẹn vào các khung giờ
+    for a in db_appointments:
+        time_key = a.start_time.strftime("%H:%M")
+        if time_key in result:
+            result[time_key] = a
 
     return result
 
@@ -260,13 +250,25 @@ def create_appointment(customer_id, service_id,
         + timedelta(minutes=service.duration_minute)
     ).time()
 
+    config = SystemConfig.query.first()
+    max_customers = config.max_appointments_per_tech_per_day
+
     if technician_id:
+        current_count = count_appointments_of_technician(technician_id, appointment_date)
+        if current_count >= max_customers:
+            raise Exception(f"Kỹ thuật viên này đã nhận đủ {max_customers} khách trong ngày!")
         technician = User.query.get(int(technician_id))
     else:
+        # Chọn tự động
         technician = get_available_technician(appointment_date)
 
     if not technician:
         raise Exception("Không có kỹ thuật viên khả dụng")
+
+
+    #Kiểm tra trùng giờ:
+    if is_time_conflict(technician.id, appointment_date, start_time, end_time):
+        raise Exception(f"KTV {technician.full_name} đã bị trùng lịch trong khung giờ này ({start_time} - {end_time})!")
 
     appt = Appointment(
         customer_id=customer_id,
@@ -333,3 +335,42 @@ def count_appointments_of_technician(technician_id, date):
         Appointment.appointment_date == date,
         Appointment.active == True
     ).count()
+
+def stats_service_usage_by_month(month, year):
+    # Đếm số lần xuất hiện của dịch vụ trong bảng Appointment theo tháng/năm
+    return db.session.query(Service.name, func.count(Appointment.id))\
+             .join(Appointment, Appointment.service_id == Service.id)\
+             .filter(extract('month', Appointment.appointment_date) == month)\
+             .filter(extract('year', Appointment.appointment_date) == year)\
+             .group_by(Service.name).all()
+
+
+def get_upcoming_appointments_by_customer(user_id):
+    today = date.today()
+    return Appointment.query.filter(
+        Appointment.customer_id == user_id,
+        Appointment.appointment_date >= today,
+        Appointment.status != 'DONE',  # Chỉ lấy lịch chưa hoàn thành
+        Appointment.active == True
+    ).order_by(Appointment.appointment_date, Appointment.start_time).limit(5).all()
+
+
+def get_customer_spending_stats(user_id):
+    # Tính tổng chi tiêu trọn đời
+    total_query = db.session.query(func.sum(Bill.total_amount)) \
+        .filter(Bill.customer_id == user_id).scalar()
+
+    total_all_time = total_query if total_query else 0
+
+    # Tính tổng chi tiêu tháng này
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+
+    monthly_query = db.session.query(func.sum(Bill.total_amount)) \
+        .filter(Bill.customer_id == user_id,
+                extract('month', Bill.created_date) == current_month,
+                extract('year', Bill.created_date) == current_year).scalar()
+
+    total_month = monthly_query if monthly_query else 0
+
+    return total_all_time, total_month
