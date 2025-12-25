@@ -9,10 +9,10 @@
   ],
 
   "2": [
-    {"url": "/reception/", "text": "Dashboard"},
-    {"url": "/reception/calendar", "text": "Lịch đặt chỗ"},
-    {"url": "/reception/appointments", "text": "Quản lý lịch hẹn"},
-    {"url": "/reception/customers", "text": "Quản lý khách hàng"}
+    {"url": "/receptionist/", "text": "Dashboard"},
+    {"url": "/receptionist/calendar", "text": "Lịch đặt chỗ"},
+    {"url": "/receptionist/appointments", "text": "Quản lý lịch hẹn"},
+    {"url": "/receptionist/customers", "text": "Quản lý khách hàng"}
   ],
 
   "4": [
