@@ -1,5 +1,8 @@
+import calendar
+import json
+
 import cloudinary
-from flask import Flask, render_template, request, redirect, url_for, abort, flash
+from flask import Flask, render_template, request, redirect, url_for, abort, flash, jsonify
 from flask_login import current_user, login_user,  login_required, logout_user
 from spaapp import dao, db
 from spaapp import login_manager, app
@@ -33,19 +36,27 @@ def customer_book():
     if current_user.role != UserRole.CUSTOMER:
         abort(403)
     menu = dao.load_menu(UserRole.CUSTOMER.value)
+
     if request.method == "POST":
         try:
+            date_str = request.form.get("date")
+            time_str = request.form.get("start_time")
+
+            booking_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+            if booking_dt < datetime.now():
+                raise Exception("Không thể đặt lịch khi đã qua giờ!")
+
             dao.create_appointment(
                 customer_id=current_user.id,
                 service_id=request.form.get("service_id"),
-                appointment_date=request.form.get("date"),
-                start_time=request.form.get("start_time"),
+                appointment_date=date_str,
+                start_time=time_str,
                 note=request.form.get("note"),
                 created_by=current_user.id
             )
             flash("Đặt lịch thành công!", "success")
         except Exception as e:
-            flash(str(e), "error")
+            flash(str(e), "danger")
 
         return redirect(url_for("customer_book"))
 
@@ -124,19 +135,23 @@ def receptionist_book():
     date = request.args.get("date")
     time = request.args.get("time")
 
+    customers = dao.get_customers()
+
     technicians = dao.get_technicians()
     services = dao.get_services()
 
     if request.method == "POST":
+
         try:
+            customer_id = request.form.get("customer_id")
             dao.create_appointment(
-                customer_id=current_user.id,  # tạm dùng user lễ tân
+                customer_id=customer_id,  # Dùng ID khách được chọn
                 service_id=request.form.get("service_id"),
                 appointment_date=request.form.get("date"),
                 start_time=request.form.get("start_time"),
-                technician_id=request.form.get("technician_id"),  # ✅ QUAN TRỌNG
+                technician_id=request.form.get("technician_id"),
                 note=request.form.get("note"),
-                created_by=current_user.id
+                created_by=current_user.id  # Người tạo là Lễ tân
             )
             flash("Đặt lịch thành công!", "success")
         except Exception as e:
@@ -148,7 +163,8 @@ def receptionist_book():
         time=time,
         services=services,
         technicians=technicians,
-        menu=menu
+        menu=menu,
+        customers=customers
     )
 
 #KTV
@@ -225,27 +241,87 @@ def cashier_home():
     print(bills)
     return render_template("cashierLayout/index.html", today=today, menu=menu, bills=bills)
 
-@app.route("/cashier/bill/<id>")
-def bill_new(id):
-    data = dao.get_bill_data(1)
-    return render_template("cashierLayout/bill.html", data=data)
+@app.route("/cashier/bill/<int:bill_id>")
+@login_required
+def bill_new(bill_id):
+    if current_user.role != UserRole.CASHIER:
+        abort(403)
 
-def create_bill_from_appointment(appt):
-    bill = Bill(
-        appointment_id=appt.id,
-        customer_id=appt.customer_id,
-        service_amount=appt.service.price if appt.service else appt.package.price,
-        total_amount=appt.service.price if appt.service else appt.package.price,
-        cashier_id=appt.created_by
-    )
-    db.session.add(bill)
-    db.session.commit()
+    data = dao.get_bill_data(bill_id)
+
+    if not data:
+        flash("Không tìm thấy hóa đơn!", "danger")
+        return redirect(url_for('cashier_home'))
+
+    discount = 0
+    discount_reason = ""
+
+    # Nếu hóa đơn chưa chốt (chưa có discount), thì tính toán gợi ý
+    if data['order'].discount_percent == 0:
+        subtotal = data['subtotal']  # Tổng tiền chưa thuế/giảm giá
+        customer_id = data['order'].customer_id
+        discount, discount_reason = dao.suggest_discount(customer_id, subtotal)
+    else:
+        discount = data['order'].discount_percent
+        discount_reason = "Đã áp dụng"
+
+    return render_template("cashierLayout/bill.html",
+                           data=data,
+                           discount=discount,
+                           discount_reason=discount_reason
+                           )
 
 
-@app.route("/admin/")
-def admin_home():
-    menu = dao.load_menu(UserRole.MANAGER.value)
-    return render_template("admin/index.html", menu=menu)
+@app.route("/api/pay/<int:bill_id>", methods=["POST"])
+@login_required
+def process_payment(bill_id):
+    if current_user.role != UserRole.CASHIER:
+        abort(403)
+
+    # Lấy dữ liệu từ JS gửi lên
+    data = request.json
+    if not data:
+        return jsonify({"status": "error", "message": "Dữ liệu gửi lên không hợp lệ"}), 400
+
+    payment_method = data.get("payment_method")
+    discount_val = data.get("discount_percent", 0)
+
+    if dao.pay_bill(bill_id, payment_method, float(discount_val)):
+        flash("Xác nhận thanh toán thành công!", "success")
+        return jsonify({"status": "success", "message": "Thanh toán thành công"})
+
+    return {"error": "Lỗi không tìm thấy hóa đơn"}, 404
+
+
+# @app.route("/admin/")
+# def admin_home():
+#     if current_user.role != UserRole.MANAGER:
+#         abort(403)
+#     menu = dao.load_menu(UserRole.MANAGER.value)
+#     today = datetime.now()
+#     total_revenue = dao.get_total_revenue(today.month, today.year)
+#     top_services = dao.get_top_services(today.month, today.year)
+#     stats_data = dao.stats_revenue_by_month(today.month, today.year)
+#
+#     days_in_month = calendar.monthrange(today.year, today.month)[1]
+#     labels = [f"Ngày {i}" for i in range(1, days_in_month + 1)]
+#     data = [0] * days_in_month
+#
+#     # Fill dữ liệu thật vào mảng data
+#     # item là (day, amount)
+#     for item in stats_data:
+#         day_index = int(item[0]) - 1  # Mảng bắt đầu từ 0
+#         data[day_index] = float(item[1])
+#
+#     return render_template("admin/index.html",
+#                            menu=menu,
+#                            total_revenue=total_revenue,
+#                            top_services=top_services,
+#                            chart_labels=json.dumps(labels),  # Chuyển sang JSON string để JS đọc được
+#                            chart_data=json.dumps(data),
+#                            current_month=today.month,
+#                            current_year=today.year
+#                            )
 
 # @app.route("/admin/user/")
 # @login_required
@@ -271,7 +347,7 @@ def get_user(user_id):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     role_map = {
-        UserRole.MANAGER: "admin_home",
+        UserRole.MANAGER: "admin.index",
         UserRole.RECEPTIONIST: "receptionist_home",
         UserRole.TECHNICIAN: "technician_home",
         UserRole.CASHIER: "cashier_home",

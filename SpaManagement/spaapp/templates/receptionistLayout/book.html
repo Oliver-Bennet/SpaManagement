@@ -14,22 +14,26 @@
     {% endwith %}
     <!--suppress HtmlUnknownTarget -->
     <form method="post" action="{{ url_for('receptionist_book') }}">
-        <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" name="full_name" placeholder="Họ tên khách hàng">
-            <label>Họ tên khách hàng</label>
-        </div>
+        <div class="mb-3 mt-3">
+            <label class="fw-bold mb-2">Chọn khách hàng</label>
 
-        <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" name="phone" placeholder="SĐT">
-            <label>SĐT</label>
+            <select class="form-select" name="customer_id" id="customer_select" required>
+                <option value="">-- Tìm khách hàng --</option>
+                {% for c in customers %}
+                <option value="{{ c.id }}">
+                    {{ c.full_name }} - {{ c.phone }}
+                </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted fst-italic">Gõ tên hoặc SĐT để tìm kiếm nhanh.</small>
         </div>
 
         <select class="form-select" name="service_id">
             <option value="">-- Chọn dịch vụ --</option>
 
             {% for s in services %}
-            <option value="{{ s.id }}">
-                {{ s.name }}
+            <option value="{{ s.id }}" data-duration="{{ s.duration_minute }}">
+                {{ s.name }} ({{ s.duration_minute }} phút)
             </option>
             {% endfor %}
         </select>
@@ -63,9 +67,9 @@
         </div>
 
 
-        <button class="btn btn-primary">Đặt lịch và in phiếu cho khách</button>
+<!--        <button class="btn btn-primary">Đặt lịch và in phiếu cho khách</button>-->
         <button type="submit" class="btn btn-success">
-            Chỉ đặt lịch cho khách
+            Đặt lịch
         </button>
     </form>
 </div>
