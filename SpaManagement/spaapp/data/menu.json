@@ -16,7 +16,7 @@
   ],
 
   "4": [
-    {"url": "/cashier/bills", "text": "Danh sách hóa đơn"},
+    {"url": "/cashier/bill", "text": "Danh sách hóa đơn"},
     {"url": "/cashier/report/today", "text": "Báo cáo hôm nay"}
   ],
 

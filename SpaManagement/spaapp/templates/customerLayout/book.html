@@ -15,12 +15,12 @@
     <!--suppress HtmlUnknownTarget -->
     <form method="post" action="{{ url_for('customer_book') }}">
         <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" name="full_name" placeholder="Họ tên khách hàng">
+            <input type="text" class="form-control" name="full_name" value ="{{current_user.full_name}}" readonly>
             <label>Họ tên khách hàng</label>
         </div>
 
         <div class="form-floating mb-3 mt-3">
-            <input type="text" class="form-control" name="phone" placeholder="SĐT">
+            <input type="text" class="form-control" name="phone" value="{{current_user.phone}}" readonly>
             <label>SĐT</label>
         </div>
 
@@ -46,7 +46,7 @@
             </small>
         </div>
 
-        <select class="form-select mb-3" name="start_time" required>
+        <select id="time-select" class="form-select mb-3" name="start_time" required>
             <option value="">-- Chọn giờ --</option>
             {% for t in time_slots %}
             <option value="{{ t }}">{{ t }}</option>
@@ -55,8 +55,8 @@
         </select>
 
         <div class="form-floating mb-3">
-            <textarea class="form-control" id="note" name="note" placeholder="Ghi chú lễ tân"></textarea>
-            <label for="note">Ghi chú lễ tân</label>
+            <textarea class="form-control" id="note" name="note" placeholder="Ghi chú khách hàng"></textarea>
+            <label for="note">Ghi chú khách hàng</label>
         </div>
 
         <div class="form-check form-switch mb-3">

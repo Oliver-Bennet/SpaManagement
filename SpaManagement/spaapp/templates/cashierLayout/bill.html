@@ -1,4 +1,3 @@
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% extends "layout/base.html" %}
 
 {% block title %}Hóa đơn thanh toán{% endblock %}
@@ -12,40 +11,31 @@
         }
     }
 </style>
-<script>
-    const total = {{ data.summary.total }};
-    function toggleCash(show) {
-        document.getElementById("cash-area").style.display = show ? "block" : "none";
-    }
-    function calcChange() {
-        const customer = document.getElementById("customerMoney").value || 0;
-        const change = customer - total;
-        document.getElementById("changeMoney").innerText =change > 0 ? change.toLocaleString() : 0;
-    }
-    </script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 <div class="container mt-4">
     <a href="/cashier" class="btn btn-primary m-1 bi bi-arrow-left"> Quay lại</a>
-    <h2 class="text-success text-center mt-2">HÓA ĐƠN THANH TOÁN(sửa lại cho pù hợp)</h2>
+    <h2 class="text-success text-center mt-2">HÓA ĐƠN THANH TOÁN</h2>
     <p>
-        <div class="text-center" >
-        <strong>Nhà hàng ABC</strong><br>
-        <strong >Địa chỉ: Đường ABC, Nhà Bè, TPHCM</strong><br>
-        <strong >Số điện thoại: 0123456789</strong><br>
-        </div>
-        <strong>Nhân viên:</strong> {{ current_user }} <br>
-        <strong>Ngày tạo:</strong>  <br>
-        <strong>Mã order:</strong> {{ data.order.id }}
+    <div class="text-center">
+        <strong>TDSPA</strong><br>
+        <strong>Địa chỉ: Khu dân cư Nhơn Đức, xã Hiệp Phước, TP. Hồ Chí Minh</strong><br>
+        <strong>Số điện thoại: 0123456789</strong><br>
+    </div>
+    <strong>Nhân viên:</strong> {{ current_user }} <br>
+    <strong>Ngày tạo:</strong> {{ data.order.created_date.strftime('%d/%m/%Y') }} <br>
+    <strong>Mã order:</strong> {{ data.order.id }}
     </p>
     <hr>
     <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Món ăn</th>
-            <th>Số lượng</th>
-            <th>Đơn giá</th>
-            <th>Thành tiền</th>
-        </tr>
-        </thead>
         <tbody>
         {% for fo in data.order_items %}
         <tr>
@@ -62,22 +52,36 @@
     <div class="container">
         <div class="row">
             <div class="col-6"><strong>Tạm tính:</strong></div>
-            <div class="col-6 text-end">{{"{:,.0f}".format(data.subtotal)}}</div>
+            <div class="col-6 text-end" id="subtotal-display">
+                {{ "{:,.0f}".format(data.subtotal) }}
+            </div>
         </div>
+
+        <div class="row align-items-center my-2">
+            <div class="col-4"><strong>Giảm giá (%):</strong></div>
+            <div class="col-3">
+                <input type="number" id="discountInput" class="form-control form-control-sm text-end"
+                       value="{{ discount }}" min="0" max="100" onchange="recalcTotal()">
+            </div>
+            <div class="col-5 text-end text-muted small fst-italic">
+                <i class="bi bi-info-circle"></i> {{ discount_reason }}
+            </div>
+        </div>
+
         <div class="row">
-            <div class="col-6"><strong>VAT (10%):</strong></div>
-            <div class="col-6 text-end">{{"{:,.0f}".format(data.summary.vat_amount)}}</div>
+            <div class="col-6"><strong>VAT ({{ data.order.vat_percent }}%):</strong></div>
+            <div class="col-6 text-end" id="vat-display">
+                {{ "{:,.0f}".format(data.summary.vat_amount) }}
+            </div>
         </div>
-        {% if data.summary.discount_rate > 0 %}
-        <div class="row">
-            <div class="col-6"><strong>Giảm giá:</strong></div>
-            <div class="col-6 text-end text-danger">-{{"{:,.0f}".format(data.summary.discount_amount)}}</div>
-        </div>
-        {% endif %}
+
         <hr>
-        <div class="row fw-bold">
-            <div class="col-6">Tổng cộng:</div>
-            <div class="col-6 text-end">{{"{:,.0f}".format(data.summary.total)}}VNĐ</div>
+
+        <div class="row fw-bold fs-5 text-success">
+            <div class="col-6">TỔNG CỘNG:</div>
+            <div class="col-6 text-end" id="final-total-display">
+                {{ "{:,.0f}".format(data.summary.total) }} VNĐ
+            </div>
         </div>
     </div>
     <hr>
@@ -102,10 +106,101 @@
         <p><strong>Tiền thối lại:</strong> <span id="changeMoney">0</span> VNĐ</p>
     </div>
 
-    <div class="d-flex gap-2">
-    <button class="btn btn-success" onclick="pay({{ data.order.table_id }})">Thanh toán</button>
-    <button onclick="window.print()" class="btn btn-success ">In hóa đơn</button>
-    </div>
+    <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-success" id="btnPay" onclick="pay({{ data.order.id }})">
+            <i class="bi bi-credit-card"></i> Xác nhận Thanh toán
+        </button>
 
+        <button onclick="window.print()" class="btn btn-secondary">
+            <i class="bi bi-printer"></i> In hóa đơn
+        </button>
+    </div>
 </div>
+
+<script>
+    // 1. Lấy dữ liệu từ Server (Python render ra số ở đây)
+    const RAW_SUBTOTAL = {{ data.subtotal }};
+    const VAT_PERCENT = {{ data.order.vat_percent }};
+
+    // Biến lưu tổng tiền hiện tại để check
+    let currentTotal = {{ data.summary.total if data.summary.total else 0 }};
+
+    // 2. Ẩn/Hiện nhập tiền mặt
+    function toggleCash(show) {
+        const cashArea = document.getElementById("cash-area");
+        if(cashArea) cashArea.style.display = show ? "block" : "none";
+    }
+
+    // 3. Tính tiền thừa
+    function calcChange() {
+        const customerMoney = parseFloat(document.getElementById("customerMoney").value) || 0;
+        const change = customerMoney - currentTotal;
+        const changeEl = document.getElementById("changeMoney");
+        if(changeEl) changeEl.innerText = change > 0 ? change.toLocaleString() : 0;
+    }
+
+    // 4. Tính lại tổng khi sửa giảm giá
+    function recalcTotal() {
+        let discountInput = document.getElementById("discountInput");
+        let discountPercent = parseFloat(discountInput.value) || 0;
+
+        // Tính toán
+        let discountAmount = RAW_SUBTOTAL * (discountPercent / 100);
+        let afterDiscount = RAW_SUBTOTAL - discountAmount;
+        let vatAmount = afterDiscount * (VAT_PERCENT / 100);
+        let finalTotal = afterDiscount + vatAmount;
+
+        // Cập nhật biến toàn cục
+        currentTotal = finalTotal;
+
+        // Hiển thị lại giao diện
+        document.getElementById("vat-display").innerText = vatAmount.toLocaleString();
+        document.getElementById("final-total-display").innerText = finalTotal.toLocaleString() + " VNĐ";
+
+        calcChange();
+    }
+
+    // 5. Hàm PAY (Xử lý thanh toán)
+    function pay(billId) {
+        let discountVal = document.getElementById("discountInput").value;
+        let method = document.getElementById("cash").checked ? "cash" : "transfer";
+
+        if (method === 'cash') {
+            let customerMoney = parseFloat(document.getElementById("customerMoney").value) || 0;
+            if (customerMoney < currentTotal) {
+                alert("Tiền khách đưa chưa đủ!");
+                return;
+            }
+        }
+
+        if(!confirm("Xác nhận hoàn tất thanh toán?")) return;
+
+        // Gọi API
+        fetch(`/api/pay/${billId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                payment_method: method,
+                discount_percent: discountVal
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = "/cashier";
+            } else {
+                alert("Lỗi: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Lỗi kết nối server!");
+        });
+    }
+
+    // Chạy 1 lần lúc mới vào trang để số liệu đồng bộ
+    document.addEventListener("DOMContentLoaded", function() {
+        recalcTotal();
+    });
+</script>
 {% endblock %}

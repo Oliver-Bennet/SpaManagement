@@ -55,6 +55,33 @@ def add_product_to_bill(bill_id, product_id, quantity):
     db.session.add(bp)
     db.session.commit()
 
+
+def suggest_discount(user_id, current_bill_amount):
+    discount_percent = 0
+    reason = "Không có khuyến mãi"
+
+    # 1. Lấy tổng chi tiêu tích lũy (VIP)
+    total_spending, _ = get_customer_spending_stats(user_id)
+    # Chính sách 1: VIP (> 10 triệu) -> Giảm 5%
+    if total_spending >= 10000000:
+        discount_percent = 5
+        reason = "Khách hàng VIP (Chi tiêu > 10tr)"
+
+    # Chính sách 2: Hóa đơn lớn (> 3 triệu) -> Giảm 10%
+    # Ưu tiên mức giảm cao hơn
+    if current_bill_amount >= 3000000:
+        if 10 > discount_percent:
+            discount_percent = 10
+            reason = "Hóa đơn giá trị cao (> 3tr)"
+
+    # Kiểm tra Config giới hạn giảm giá tối đa (ví dụ max 20%)
+    config = SystemConfig.query.first()
+    if config and discount_percent > config.max_discount_percent:
+        discount_percent = config.max_discount_percent
+        reason = f"Đã giới hạn tối đa {config.max_discount_percent}%"
+
+    return discount_percent, reason
+
 def get_services():
     return Service.query.filter_by(active=True).all()
 
@@ -193,6 +220,7 @@ def get_bills_for_today():
                 services.append(appointment.package.name)
 
         bill_info = {
+            "id": bill.id,
             "customer": user.full_name,
             "services": " + ".join(services) if services else "Không có dịch vụ",
             "products": ", ".join(product_names) if product_names else "Không có sản phẩm",
@@ -201,6 +229,29 @@ def get_bills_for_today():
         }
         bills.append(bill_info)
     return bills
+
+
+def pay_bill(bill_id, payment_method, discount_percent=0):  # Thêm tham số discount_percent
+    bill = Bill.query.get(bill_id)
+    if bill:
+        bill.payment_method = payment_method
+        bill.discount_percent = discount_percent
+
+        # Tính toán lại tổng tiền cuối cùng trước khi lưu
+        # Logic: (Dịch vụ + Sản phẩm) - Giảm giá + VAT
+        subtotal = float(bill.service_amount) + float(bill.product_amount)
+        discount_amount = subtotal * (discount_percent / 100)
+        after_discount = subtotal - discount_amount
+        vat_amount = after_discount * (float(bill.vat_percent) / 100)
+
+        bill.total_amount = after_discount + vat_amount
+
+        # (Tùy chọn) Cập nhật trạng thái nếu có cột status
+        # bill.status = 'paid'
+
+        db.session.commit()
+        return True
+    return False
 
 def create_bill_from_appointment(appt):
     config = SystemConfig.query.first()
@@ -374,3 +425,51 @@ def get_customer_spending_stats(user_id):
     total_month = monthly_query if monthly_query else 0
 
     return total_all_time, total_month
+
+
+def stats_revenue_by_month(month=None, year=None):
+    if not month:
+        month = datetime.now().month
+    if not year:
+        year = datetime.now().year
+
+    # Query tổng tiền theo từng ngày
+    # extract('day', ...) lấy ngày trong tháng (1, 2, ..., 31)
+    query = db.session.query(
+        extract('day', Bill.created_date),
+        func.sum(Bill.total_amount)
+    ).filter(
+        extract('month', Bill.created_date) == month,
+        extract('year', Bill.created_date) == year
+    ).group_by(
+        extract('day', Bill.created_date)
+    ).all()
+    return query
+
+
+def get_top_services(month=None, year=None, limit=5):
+    if not month: month = datetime.now().month
+    if not year: year = datetime.now().year
+
+    return db.session.query(
+        Service.name,
+        func.count(Appointment.id).label('count')
+    ).join(Appointment, Appointment.service_id == Service.id) \
+        .filter(
+        extract('month', Appointment.appointment_date) == month,
+        extract('year', Appointment.appointment_date) == year,
+        Appointment.status == 'DONE'  # Chỉ tính các lịch đã hoàn thành
+    ).group_by(Service.name) \
+        .order_by(func.count(Appointment.id).desc()) \
+        .limit(limit).all()
+
+
+def get_total_revenue(month=None, year=None):
+    if not month: month = datetime.now().month
+    if not year: year = datetime.now().year
+
+    return db.session.query(func.sum(Bill.total_amount)) \
+        .filter(
+        extract('month', Bill.created_date) == month,
+        extract('year', Bill.created_date) == year
+    ).scalar() or 0
