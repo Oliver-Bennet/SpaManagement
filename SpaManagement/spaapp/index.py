@@ -228,6 +228,8 @@ def technician_record(appt_id):
 
         flash("Đã hoàn thành dịch vụ và lưu hồ sơ!", "success")
 
+        return redirect(url_for('technician_home', date=appt.appointment_date))
+
     return render_template(
         "technicianLayout/record.html",
         appt=appt
@@ -236,10 +238,13 @@ def technician_record(appt_id):
 @app.route("/cashier/")
 def cashier_home():
     menu = dao.load_menu(UserRole.CASHIER.value)
+    recent_bills = dao.get_recent_bills(limit=10)
     today = datetime.today()
     bills = dao.get_bills_for_today()
     print(bills)
-    return render_template("cashierLayout/index.html", today=today, menu=menu, bills=bills)
+    return render_template("cashierLayout/index.html", today=today, menu=menu, bills=bills, recent_bills=recent_bills)
+
+
 
 @app.route("/cashier/bill/<int:bill_id>")
 @login_required

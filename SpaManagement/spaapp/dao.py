@@ -231,6 +231,36 @@ def get_bills_for_today():
     return bills
 
 
+def get_recent_bills(limit=10):
+    bills_query = db.session.query(Bill, User).join(User, Bill.customer_id == User.id) \
+        .order_by(Bill.created_date.desc()) \
+        .limit(limit).all()
+
+    result = []
+    for bill, user in bills_query:
+        bill_products = BillProduct.query.filter_by(bill_id=bill.id).all()
+        product_names = [Product.query.get(bp.product_id).name for bp in bill_products]
+
+        services = []
+        if bill.appointment_id:
+            appointment = Appointment.query.get(bill.appointment_id)
+            if appointment and appointment.service:
+                services.append(appointment.service.name)
+            if appointment and appointment.package:
+                services.append(appointment.package.name)
+
+        bill_info = {
+            "id": bill.id,
+            "customer": user.full_name,
+            "services": " + ".join(services) if services else "Không có dịch vụ",
+            "products": ", ".join(product_names) if product_names else "Không có sản phẩm",
+            "total": f"{bill.total_amount:,.0f} đ",  # Format số đẹp luôn ở đây
+            "status": "paid" if bill.payment_method else "unpaid"
+        }
+        result.append(bill_info)
+
+    return result
+
 def pay_bill(bill_id, payment_method, discount_percent=0):  # Thêm tham số discount_percent
     bill = Bill.query.get(bill_id)
     if bill:

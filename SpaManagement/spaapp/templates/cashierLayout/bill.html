@@ -25,14 +25,14 @@
     <a href="/cashier" class="btn btn-primary m-1 bi bi-arrow-left"> Quay lại</a>
     <h2 class="text-success text-center mt-2">HÓA ĐƠN THANH TOÁN</h2>
     <p>
-    <div class="text-center">
-        <strong>TDSPA</strong><br>
-        <strong>Địa chỉ: Khu dân cư Nhơn Đức, xã Hiệp Phước, TP. Hồ Chí Minh</strong><br>
-        <strong>Số điện thoại: 0123456789</strong><br>
-    </div>
-    <strong>Nhân viên:</strong> {{ current_user }} <br>
-    <strong>Ngày tạo:</strong> {{ data.order.created_date.strftime('%d/%m/%Y') }} <br>
-    <strong>Mã order:</strong> {{ data.order.id }}
+        <div class="text-center">
+            <strong>TDSPA</strong><br>
+            <strong>Địa chỉ: Khu dân cư Nhơn Đức, xã Hiệp Phước, TP. Hồ Chí Minh</strong><br>
+            <strong>Số điện thoại: 0123456789</strong><br>
+        </div>
+        <strong>Nhân viên:</strong> {{ current_user }} <br>
+        <strong>Ngày tạo:</strong> {{ data.order.created_date.strftime('%d/%m/%Y') }} <br>
+        <strong>Mã order:</strong> {{ data.order.id }}
     </p>
     <hr>
     <table class="table table-bordered">
