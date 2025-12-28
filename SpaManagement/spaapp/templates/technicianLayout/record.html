@@ -3,7 +3,6 @@
 
 {% block content %}
 <div class="container my-5">
-
     <div class="card shadow">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">📋 Ghi nhận tiến trình dịch vụ</h5>
@@ -19,22 +18,23 @@
                                 {{ appt.service.name if appt.service else appt.package.name }}
                             </span>
                         </p>
-                        <p class="mb-2"><strong>🕒 Thời gian đặt:</strong> {{ appt.start_time }} - {{ appt.end_time }}</p>
+                        <p class="mb-2"><strong>🕒 Thời gian đặt:</strong> {{ appt.start_time }} - {{ appt.end_time }}
+                        </p>
                     </div>
                     <div class="col-md-6">
                         <p class="mb-2"><strong>⏳ Thời lượng:</strong>
                             {% if appt.service %}
-                                {{ appt.service.duration_minute }} phút
+                            {{ appt.service.duration_minute }} phút
                             {% else %}
-                                {{ appt.package.get_duration() }} phút
+                            {{ appt.package.get_duration() }} phút
                             {% endif %}
                         </p>
 
                         <p class="mb-2"><strong>💰 Giá niêm yết:</strong>
                             {% if appt.service %}
-                                {{ "{:,.0f}".format(appt.service.price) }} VNĐ
+                            {{ "{:,.0f}".format(appt.service.price) }} VNĐ
                             {% else %}
-                                {{ "{:,.0f}".format(appt.package.price) }} VNĐ
+                            {{ "{:,.0f}".format(appt.package.price) }} VNĐ
                             {% endif %}
                         </p>
 
