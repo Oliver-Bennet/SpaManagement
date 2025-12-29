@@ -57,24 +57,66 @@
                 {% if appt %}
                 <!-- CÓ LỊCH -->
                 <div class="col-6">
-                    <div class="fw-bold">
+                    <div class="fw-bold text-primary">
                         {{ appt.customer.full_name }}
                     </div>
                     <div class="text-muted small">
-                        {{ appt.service.name }} • KTV: {{ appt.technician.full_name }}
+                        {{ appt.service.name }}
+                    </div>
+
+                    <div class="mt-1" id="appt-status-{{ appt.id }}">
+                        {% if appt.technician %}
+                        <span class="badge bg-light text-dark border">
+            <i class="fas fa-user-check text-success"></i> KTV: {{ appt.technician.full_name }}
+        </span>
+                        {% else %}
+                        <button type="button" class="btn btn-warning btn-sm py-0"
+                                onclick="openAssignModal({{ appt.id }}, '{{ appt.customer.full_name }}')">
+                            <i class="fas fa-user-plus"></i> Phân công ngay
+                        </button>
+
+                        <div class="modal fade" id="assignModal{{ appt.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Phân công cho {{ appt.customer.full_name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <form onsubmit="event.preventDefault(); handleAssign({{ appt.id }});">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+                                            <div class="mb-3">
+                                                <label class="fw-bold">Chọn Kỹ thuật viên:</label>
+                                                <select class="form-select" name="technician_id"
+                                                        id="tech-select-{{ appt.id }}" required>
+                                                    <option value="">-- Chọn nhân viên --</option>
+                                                    {% for tech in technicians %}
+                                                    <option value="{{ tech.id }}">{{ tech.full_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                Đóng
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">Lưu</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
                 <div class="col-4 text-end">
-                    <a href="#" class="btn btn-outline-success btn-sm">
-                        Check-in
-                    </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm mx-1">
-                        Sửa
-                    </a>
-                    <a href="#" class="btn btn-outline-danger btn-sm">
-                        Hủy
-                    </a>
+                    {% if appt.technician %}
+                    <a href="#" class="btn btn-outline-success btn-sm">Check-in</a>
+                    {% endif %}
+
+                    <a href="#" class="btn btn-outline-danger btn-sm mx-1">Hủy</a>
                 </div>
 
                 {% else %}
@@ -107,4 +149,108 @@
     </div>
 
 </div>
+
+<div class="modal fade" id="sharedAssignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Phân công KTV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form onsubmit="event.preventDefault(); handleAssignSubmit();">
+                <div class="modal-body">
+                    <input type="hidden" id="shared_appt_id" name="appointment_id">
+
+                    <p>Khách hàng: <strong id="modalCustomerName" class="text-primary"></strong></p>
+
+                    <div class="mb-3">
+                        <label class="fw-bold">Chọn Kỹ thuật viên:</label>
+                        <select class="form-select" id="shared_technician_id" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                            {% for tech in technicians %}
+                            <option value="{{ tech.id }}">{{ tech.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Khởi tạo đối tượng Modal của Bootstrap
+    let assignModal;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const modalEl = document.getElementById('sharedAssignModal');
+        if (modalEl) {
+            assignModal = new bootstrap.Modal(modalEl);
+        }
+    });
+
+    // 1. Hàm mở Modal và điền dữ liệu
+    function openAssignModal(apptId, customerName) {
+        // Điền ID và Tên khách vào Modal chung
+        document.getElementById('shared_appt_id').value = apptId;
+        document.getElementById('modalCustomerName').innerText = customerName;
+
+        // Reset ô chọn nhân viên về mặc định
+        document.getElementById('shared_technician_id').value = "";
+
+        // Hiện Modal
+        if (assignModal) assignModal.show();
+    }
+
+    // 2. Hàm xử lý khi bấm Lưu
+    function handleAssignSubmit() {
+        // Lấy dữ liệu từ Modal chung
+        const apptId = document.getElementById('shared_appt_id').value;
+        const techId = document.getElementById('shared_technician_id').value;
+
+        if (!techId) {
+            alert("Vui lòng chọn nhân viên!");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('appointment_id', apptId);
+        formData.append('technician_id', techId);
+
+        // Gửi AJAX
+        fetch('/receptionist/assign-technician', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Đóng modal chuẩn Bootstrap (không lo nhấp nháy)
+                assignModal.hide();
+
+                // Cập nhật giao diện bên ngoài
+                // Tìm vị trí cần update dựa trên ID lịch hẹn
+                const statusDiv = document.getElementById(`appt-status-${apptId}`);
+                if (statusDiv) {
+                    statusDiv.innerHTML = `
+                        <span class="badge bg-light text-dark border">
+                            <i class="fas fa-user-check text-success"></i> KTV: ${data.tech_name}
+                        </span>
+                    `;
+                }
+            } else {
+                alert("Lỗi: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Lỗi kết nối server");
+        });
+    }
+</script>
 {% endblock %}

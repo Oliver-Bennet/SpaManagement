@@ -10,8 +10,7 @@
 
   "2": [
     {"url": "/receptionist/", "text": "Dashboard"},
-    {"url": "/receptionist/calendar", "text": "Lịch đặt chỗ"},
-    {"url": "/receptionist/appointments", "text": "Quản lý lịch hẹn"},
+    {"url": "/receptionist/calendar", "text": "Quản lý lịch hẹn"},
     {"url": "/receptionist/customers", "text": "Quản lý khách hàng"}
   ],
 

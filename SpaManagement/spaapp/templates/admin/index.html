@@ -31,7 +31,7 @@
         <div class="col-md-7 col-lg-8 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Biểu đồ doanh thu tháng {{ current_month }}</h5>
+                    <h5 class="mb-0">Biểu đồ doanh thu tháng {{ current_month }}/{{ current_year }}</h5>
                 </div>
                 <div class="card-body">
                     <canvas id="myChart" height="300"></canvas>
@@ -53,12 +53,14 @@
                     </thead>
                     <tbody>
                     {% for service in top_services %}
-                        <tr>
-                            <td>{{ service.name }}</td>
-                            <td class="text-center fw-bold">{{ service.count }}</td>
-                        </tr>
+                    <tr>
+                        <td>{{ service.name }}</td>
+                        <td class="text-center fw-bold">{{ service.count }}</td>
+                    </tr>
                     {% else %}
-                        <tr><td colspan="2" class="text-center">Chưa có dữ liệu</td></tr>
+                    <tr>
+                        <td colspan="2" class="text-center">Chưa có dữ liệu</td>
+                    </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -69,48 +71,48 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('myChart');
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('myChart');
 
-    // NHẬN DỮ LIỆU TỪ PYTHON (JINJA2)
-    // Lưu ý: dùng |safe để không bị lỗi quote
-    const labels = {{ chart_labels | safe }};
-    const data = {{ chart_data | safe }};
+        // NHẬN DỮ LIỆU TỪ PYTHON (JINJA2)
+        // Lưu ý: dùng |safe để không bị lỗi quote
+        const labels = {{ chart_labels | safe }};
+        const data = {{ chart_data | safe }};
 
-    new Chart(ctx, {
-        type: 'line', // Hoặc 'bar' nếu muốn biểu đồ cột
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: data,
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25,135,84,0.1)',
-                borderWidth: 2,
-                tension: 0.3, // Đường cong mềm mại
-                fill: true,
-                pointRadius: 3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true }
+        new Chart(ctx, {
+            type: 'line', // Hoặc 'bar' nếu muốn biểu đồ cột
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: data,
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25,135,84,0.1)',
+                    borderWidth: 2,
+                    tension: 0.3, // Đường cong mềm mại
+                    fill: true,
+                    pointRadius: 3
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            // Format số tiền trục Y (VD: 1.000.000)
-                            return value.toLocaleString('vi-VN');
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                // Format số tiền trục Y (VD: 1.000.000)
+                                return value.toLocaleString('vi-VN');
+                            }
                         }
                     }
                 }
             }
-        }
+        });
     });
-});
 </script>
 {% endblock %}

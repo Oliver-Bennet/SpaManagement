@@ -231,22 +231,27 @@ def get_bills_for_today():
     return bills
 
 
-def get_recent_bills(limit=10):
-    bills_query = db.session.query(Bill, User).join(User, Bill.customer_id == User.id) \
-        .order_by(Bill.created_date.desc()) \
-        .limit(limit).all()
+def get_recent_bills():
+    today = date.today()
+    yesterday = today - timedelta(days=1)
 
-    result = []
+    bills_query = db.session.query(Bill, User).join(User, Bill.customer_id == User.id).filter(
+        Bill.created_date.cast(db.Date) <= yesterday
+    ).all()
+
+    bills = []
     for bill, user in bills_query:
+        # Lấy danh sách sản phẩm trong hóa đơn
         bill_products = BillProduct.query.filter_by(bill_id=bill.id).all()
         product_names = [Product.query.get(bp.product_id).name for bp in bill_products]
 
+        # Lấy danh sách dịch vụ, ví dụ nếu có appointment liên kết với bill
         services = []
         if bill.appointment_id:
             appointment = Appointment.query.get(bill.appointment_id)
-            if appointment and appointment.service:
+            if appointment.service:
                 services.append(appointment.service.name)
-            if appointment and appointment.package:
+            if appointment.package:
                 services.append(appointment.package.name)
 
         bill_info = {
@@ -254,12 +259,11 @@ def get_recent_bills(limit=10):
             "customer": user.full_name,
             "services": " + ".join(services) if services else "Không có dịch vụ",
             "products": ", ".join(product_names) if product_names else "Không có sản phẩm",
-            "total": f"{bill.total_amount:,.0f} đ",  # Format số đẹp luôn ở đây
+            "total": f"{bill.total_amount} đ",
             "status": "paid" if bill.payment_method else "unpaid"
         }
-        result.append(bill_info)
-
-    return result
+        bills.append(bill_info)
+    return bills
 
 def pay_bill(bill_id, payment_method, discount_percent=0):  # Thêm tham số discount_percent
     bill = Bill.query.get(bill_id)
@@ -319,52 +323,84 @@ def get_appointment_by_id(appt_id):
 #Tao lich hen moi (cho le tan va khach)
 def create_appointment(customer_id, service_id,
                        appointment_date, start_time,
-                       note, created_by, technician_id=None):
+                       note, created_by, technician_id=None):  # technician_id mặc định là None
 
     appointment_date = datetime.strptime(appointment_date, "%Y-%m-%d").date()
     start_time = datetime.strptime(start_time, "%H:%M").time()
 
     service = Service.query.get(service_id)
 
+    # Tính giờ kết thúc
     end_time = (
-        datetime.combine(date.today(), start_time)
-        + timedelta(minutes=service.duration_minute)
+            datetime.combine(date.today(), start_time)
+            + timedelta(minutes=service.duration_minute)
     ).time()
 
-    config = SystemConfig.query.first()
-    max_customers = config.max_appointments_per_tech_per_day
-
+    # TRƯỜNG HỢP 1: NẾU CÓ technician_id (Do Lễ tân chọn hoặc Phân công sau này)
     if technician_id:
-        current_count = count_appointments_of_technician(technician_id, appointment_date)
-        if current_count >= max_customers:
-            raise Exception(f"Kỹ thuật viên này đã nhận đủ {max_customers} khách trong ngày!")
         technician = User.query.get(int(technician_id))
+
+        config = SystemConfig.query.first()
+        max_customers = config.max_appointments_per_tech_per_day
+        current_count = count_appointments_of_technician(technician_id, appointment_date)
+
+        if current_count >= max_customers:
+            raise Exception(f"KTV {technician.full_name} đã nhận đủ {max_customers} khách trong ngày!")
+
+        # 2. Check trùng giờ
+        if is_time_conflict(technician.id, appointment_date, start_time, end_time):
+            raise Exception(f"KTV {technician.full_name} bị trùng lịch lúc {start_time}!")
+
+        status = "confirmed"  # Đã có nhân viên -> Đã xác nhận
+
+    # TRƯỜNG HỢP 2: KHÁCH TỰ ĐẶT (Chưa có KTV)
     else:
-        # Chọn tự động
-        technician = get_available_technician(appointment_date)
-
-    if not technician:
-        raise Exception("Không có kỹ thuật viên khả dụng")
-
-
-    #Kiểm tra trùng giờ:
-    if is_time_conflict(technician.id, appointment_date, start_time, end_time):
-        raise Exception(f"KTV {technician.full_name} đã bị trùng lịch trong khung giờ này ({start_time} - {end_time})!")
+        technician_id = None
+        status = "pending"  # Chờ phân công
 
     appt = Appointment(
         customer_id=customer_id,
         service_id=service_id,
-        technician_id=technician.id,
+        technician_id=technician_id,  # Có thể là ID hoặc None
         appointment_date=appointment_date,
         start_time=start_time,
         end_time=end_time,
-        status="pending",
+        status=status,
         note=note,
         created_by=created_by
     )
 
     db.session.add(appt)
     db.session.commit()
+    return appt
+
+
+def assign_technician(appt_id, technician_id):
+    appt = Appointment.query.get(appt_id)
+    if not appt:
+        return False, "Không tìm thấy lịch hẹn"
+
+    # Gọi lại logic kiểm tra trùng lịch/số lượng khách ở trên
+    # (Bạn có thể tách logic check ở bước 2 ra hàm riêng để tái sử dụng,
+    # nhưng viết thẳng vào đây cũng được cho nhanh)
+
+    appointment_date = appt.appointment_date
+
+    # 1. Check giới hạn
+    config = SystemConfig.query.first()
+    if count_appointments_of_technician(technician_id, appointment_date) >= config.max_appointments_per_tech_per_day:
+        return False, "Kỹ thuật viên này đã đầy lịch hôm nay"
+
+    # 2. Check trùng giờ
+    if is_time_conflict(technician_id, appointment_date, appt.start_time, appt.end_time):
+        return False, "Kỹ thuật viên bị trùng giờ với lịch khác"
+
+    # Nếu thỏa mãn hết: Update
+    appt.technician_id = technician_id
+    appt.status = "confirmed"  # Đổi trạng thái sang Đã xác nhận
+    db.session.commit()
+
+    return True, "Phân công thành công"
 
 #Hoan thanh dich vu (Dong bang)
 def complete_appointment(appt_id, note=None):
@@ -503,3 +539,59 @@ def get_total_revenue(month=None, year=None):
         extract('month', Bill.created_date) == month,
         extract('year', Bill.created_date) == year
     ).scalar() or 0
+
+
+def get_receptionist_stats():
+    today = date.today()
+    now_time = datetime.now().time()
+
+    today_appts = Appointment.query.filter(
+        Appointment.appointment_date == today,
+        Appointment.active == True
+    ).all()
+
+    total_today = len(today_appts)
+
+    pending_count = Appointment.query.filter(
+        Appointment.status == 'pending',
+        Appointment.active == True,
+        Appointment.appointment_date >= today
+    ).count()
+
+    technician_count = User.query.filter(User.role == UserRole.TECHNICIAN, User.active == True).count()
+
+    total_slots_per_day = len(generate_time_slots())
+
+    max_capacity = technician_count * total_slots_per_day
+    empty_slots = max_capacity - total_today
+    if empty_slots < 0: empty_slots = 0
+
+    return {
+        "total_today": total_today,
+        "pending": pending_count,
+        "empty_slots": empty_slots
+    }
+
+
+def get_or_create_guest_customer(full_name, phone):
+    existing_user = User.query.filter_by(phone=phone).first()
+    if existing_user:
+        return existing_user
+
+    # Username sẽ là SĐT, Password mặc định là 123456 (hash md5)
+    import hashlib
+    default_password = hashlib.md5("123456".encode('utf-8')).hexdigest()
+
+    new_user = User(
+        full_name=full_name,
+        username=phone,  # Dùng SĐT làm username luôn
+        password=default_password,
+        phone=phone,
+        role=UserRole.CUSTOMER,
+        image="https://res.cloudinary.com/dy1unykph/image/upload/v1740037805/default-avatar.webp"  # Ảnh mặc định
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return new_user

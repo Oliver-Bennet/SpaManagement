@@ -95,9 +95,12 @@ def customer_appointments():
 
 @app.route("/receptionist/")
 def receptionist_home():
+    if current_user.role != UserRole.RECEPTIONIST:
+        abort(403)
     menu = dao.load_menu(UserRole.RECEPTIONIST.value)
     today = datetime.today()
-    return render_template("receptionistLayout/index.html", today=today, menu=menu)
+    stats = dao.get_receptionist_stats()
+    return render_template("receptionistLayout/index.html", today=today, menu=menu, stats=stats)
 
 @app.route("/receptionist/calendar")
 @login_required
@@ -116,13 +119,15 @@ def receptionist_calendar():
     days = [today + timedelta(days=i) for i in range(-1, 6)]
 
     schedule = get_schedule_by_date(selected_date)
+    technicians = dao.get_technicians()
     return render_template("receptionistLayout/calendar.html",
                            days=days,
                            selected_date=selected_date,
                            schedule=schedule,
                            now=datetime.now,
                            today=date.today(),
-                           menu=menu
+                           menu=menu,
+                           technicians=technicians
                            )
 @app.route("/receptionist/book", methods=["GET", "POST"])
 @login_required
@@ -141,17 +146,30 @@ def receptionist_book():
     services = dao.get_services()
 
     if request.method == "POST":
-
         try:
+            # KIỂM TRA LOGIC KHÁCH HÀNG
             customer_id = request.form.get("customer_id")
+            new_fullname = request.form.get("new_fullname")
+            new_phone = request.form.get("new_phone")
+
+            # Nếu có nhập tên mới -> Tức là đang dùng chế độ Khách mới
+            if new_fullname and new_phone:
+                # Gọi hàm DAO vừa viết để tạo hoặc lấy user
+                customer = dao.get_or_create_guest_customer(new_fullname, new_phone)
+                customer_id = customer.id
+
+            # Nếu không có customer_id (trường hợp quên chọn)
+            if not customer_id:
+                raise Exception("Vui lòng chọn khách hàng hoặc nhập thông tin khách mới")
+
             dao.create_appointment(
-                customer_id=customer_id,  # Dùng ID khách được chọn
+                customer_id=customer_id,  # Dùng ID đã xử lý ở trên
                 service_id=request.form.get("service_id"),
                 appointment_date=request.form.get("date"),
                 start_time=request.form.get("start_time"),
                 technician_id=request.form.get("technician_id"),
                 note=request.form.get("note"),
-                created_by=current_user.id  # Người tạo là Lễ tân
+                created_by=current_user.id
             )
             flash("Đặt lịch thành công!", "success")
         except Exception as e:
@@ -166,6 +184,29 @@ def receptionist_book():
         menu=menu,
         customers=customers
     )
+
+
+@app.route("/receptionist/assign-technician", methods=["POST"])
+@login_required
+def assign_technician_route():
+    if current_user.role != UserRole.RECEPTIONIST:
+        abort(403)
+
+    appt_id = request.form.get("appointment_id")
+    tech_id = request.form.get("technician_id")
+
+    success, message = dao.assign_technician(appt_id, tech_id)
+
+    if success:
+        # Lấy thông tin KTV để trả về cho giao diện hiển thị
+        tech = User.query.get(tech_id)
+        return jsonify({
+            "status": "success",
+            "message": message,
+            "tech_name": tech.full_name
+        })
+    else:
+        return jsonify({"status": "error", "message": message}), 400
 
 #KTV
 @app.route("/technician")
@@ -238,7 +279,7 @@ def technician_record(appt_id):
 @app.route("/cashier/")
 def cashier_home():
     menu = dao.load_menu(UserRole.CASHIER.value)
-    recent_bills = dao.get_recent_bills(limit=10)
+    recent_bills = dao.get_recent_bills()
     today = datetime.today()
     bills = dao.get_bills_for_today()
     print(bills)
