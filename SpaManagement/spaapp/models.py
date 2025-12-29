@@ -25,7 +25,7 @@ class Base(db.Model):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     active = Column(Boolean, default=True)
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=datetime.now)
 # 1
 class User(Base, UserMixin):
     __tablename__ = 'users'
@@ -140,7 +140,7 @@ class Appointment(Base):
     customer_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     service_id = Column(Integer, ForeignKey('services.id'), nullable=True)
     package_id = Column(Integer, ForeignKey('service_packages.id'), nullable=True)
-    technician_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    technician_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     appointment_date = Column(Date, nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)

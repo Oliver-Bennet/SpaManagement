@@ -14,18 +14,43 @@
     {% endwith %}
     <!--suppress HtmlUnknownTarget -->
     <form method="post" action="{{ url_for('receptionist_book') }}">
-        <div class="mb-3 mt-3">
-            <label class="fw-bold mb-2">Chọn khách hàng</label>
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label class="fw-bold">Thông tin khách hàng</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="newCustomerSwitch" onchange="toggleCustomerMode()">
+                        <label class="form-check-label" for="newCustomerSwitch">Khách mới (Chưa có TK)</label>
+                    </div>
+                </div>
 
-            <select class="form-select" name="customer_id" id="customer_select" required>
-                <option value="">-- Tìm khách hàng --</option>
-                {% for c in customers %}
-                <option value="{{ c.id }}">
-                    {{ c.full_name }} - {{ c.phone }}
-                </option>
-                {% endfor %}
-            </select>
-            <small class="text-muted fst-italic">Gõ tên hoặc SĐT để tìm kiếm nhanh.</small>
+                <div id="existing-customer-area">
+                    <select class="form-select" name="customer_id" id="customer_select" style="width: 100%">
+                        <option value="">-- Tìm kiếm khách hàng --</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}">
+                            {{ c.full_name }} - {{ c.phone }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="new-customer-area" style="display: none;">
+                    <div class="row g-2">
+                        <div class="form-floating col-md-6">
+                            <input type="text" class="form-control" name="new_fullname" placeholder="Nhập họ tên khách *" id="new_name">
+                            <label for="new_name">Nhập họ tên khách *</label>
+                        </div>
+                        <div class="form-floating col-md-6">
+                            <input type="text" class="form-control" name="new_phone" placeholder="Nhập số điện thoại *" id="new_phone">
+                            <label for="new_phone">Nhập số điện thoại *</label>
+                        </div>
+                    </div>
+                    <small class="text-muted fst-italic mt-1 d-block">
+                        * Hệ thống sẽ tự tạo tài khoản với SĐT này.
+                    </small>
+                </div>
+            </div>
         </div>
 
         <select class="form-select" name="service_id">
@@ -33,7 +58,7 @@
 
             {% for s in services %}
             <option value="{{ s.id }}" data-duration="{{ s.duration_minute }}">
-                {{ s.name }} ({{ s.duration_minute }} phút)
+                {{ s.name }} ({{ s.duration_minute }} phút) ({{ "{:,.0f}".format(s.price) }}đ)
             </option>
             {% endfor %}
         </select>
@@ -73,4 +98,27 @@
         </button>
     </form>
 </div>
+
+<script>
+    function toggleCustomerMode() {
+        const isNew = document.getElementById("newCustomerSwitch").checked;
+        const existingArea = document.getElementById("existing-customer-area");
+        const newArea = document.getElementById("new-customer-area");
+
+        if (isNew) {
+            existingArea.style.display = "none";
+            newArea.style.display = "block";
+            // Bỏ required của select cũ để không bị lỗi form
+            $('#customer_select').prop('required', false);
+            document.getElementById("new_name").required = true;
+            document.getElementById("new_phone").required = true;
+        } else {
+            existingArea.style.display = "block";
+            newArea.style.display = "none";
+            $('#customer_select').prop('required', true);
+            document.getElementById("new_name").required = false;
+            document.getElementById("new_phone").required = false;
+        }
+    }
+</script>
 {% endblock %}

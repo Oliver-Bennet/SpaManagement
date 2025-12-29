@@ -29,7 +29,7 @@
 
             {% for s in services %}
             <option value="{{ s.id }}" data-duration="{{ s.duration_minute }}">
-                {{ s.name }} ({{ s.duration_minute }} phút)
+                {{ s.name }} ({{ s.duration_minute }} phút) ({{ "{:,.0f}".format(s.price) }}đ)
             </option>
             {% endfor %}
         </select>

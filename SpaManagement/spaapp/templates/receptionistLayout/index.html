@@ -18,7 +18,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Khách hôm nay</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_today }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -34,26 +34,10 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Lịch trống</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">8 slot</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.empty_slots }} slot</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Số khách đã điểm danh</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">10 khách</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -66,7 +50,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Lịch cần phân công</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-user-clock fa-2x text-gray-300"></i>
